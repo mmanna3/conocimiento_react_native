@@ -161,8 +161,8 @@ p.saludar(); // busca en `p`, luego en Persona.prototype</code></pre>
   </div>
 </section>
 
-<section class="question">
-  <h2>9. Pasar por valor vs por referencia</h2>
+<section class="question important" id="q9">
+  <h2>9. Pasar por valor vs por referencia <span class="tag-important">Importante</span></h2>
   <div class="answer">
     <p>Primitivos (<code>number</code>, <code>string</code>, <code>boolean</code>, <code>null</code>, <code>undefined</code>, <code>symbol</code>, <code>bigint</code>) se pasan <strong>por valor</strong> — la función recibe una copia.</p>
     <p>Objetos, arrays y funciones se pasan <strong>por referencia al mismo objeto</strong> — podés mutar el contenido y afecta al original:</p>
@@ -177,8 +177,8 @@ console.log(c); // ['pan']</code></pre>
   </div>
 </section>
 
-<section class="question">
-  <h2>10. == vs === y coerción</h2>
+<section class="question important" id="q10">
+  <h2>10. == vs === y coerción <span class="tag-important">Importante</span></h2>
   <div class="answer">
     <p><code>===</code> (igualdad estricta) compara valor y tipo, sin conversión. <code>==</code> aplica reglas de coerción (legacy, difícil de predecir):</p>
     <pre><code>0 == false;   // true
@@ -190,8 +190,8 @@ null === undefined; // false</code></pre>
   </div>
 </section>
 
-<section class="question">
-  <h2>11. Copia superficial vs profunda</h2>
+<section class="question important" id="q11">
+  <h2>11. Copia superficial vs profunda <span class="tag-important">Importante</span></h2>
   <div class="answer">
     <p><strong>Shallow copy</strong> — un nivel nuevo, objetos anidados siguen compartiendo referencia:</p>
     <pre><code>const original = { a: 1, nested: { b: 2 } };
@@ -202,8 +202,8 @@ console.log(original.nested.b); // 99</code></pre>
   </div>
 </section>
 
-<section class="question">
-  <h2>12. Debounce vs throttle</h2>
+<section class="question important" id="q12">
+  <h2>12. Debounce vs throttle <span class="tag-important">Importante</span></h2>
   <div class="answer">
     <p><strong>Debounce</strong> — ejecuta después de que dejás de disparar el evento (ej. búsqueda al dejar de tipear 300 ms).</p>
     <p><strong>Throttle</strong> — como máximo una ejecución cada X ms (ej. scroll o resize para no saturar).</p>
@@ -229,8 +229,8 @@ function throttle(fn, ms) {
   </div>
 </section>
 
-<section class="question">
-  <h2>13. Módulos ES (import / export)</h2>
+<section class="question important" id="q13">
+  <h2>13. Módulos ES (import / export) <span class="tag-important">Importante</span></h2>
   <div class="answer">
     <p>ES Modules son estáticos: imports resueltos en parse time, tree-shakeables.</p>
     <pre><code>// utils.js
@@ -247,8 +247,8 @@ import suma, { PI } from './utils.js';</code></pre>
   </div>
 </section>
 
-<section class="question">
-  <h2>14. Sintaxis moderna útil en entrevistas</h2>
+<section class="question important" id="q14">
+  <h2>14. Sintaxis moderna útil en entrevistas <span class="tag-important">Importante</span></h2>
   <div class="answer">
     <pre><code>// Optional chaining — evita crashes por null/undefined
 const ciudad = usuario?.direccion?.ciudad;
@@ -267,8 +267,8 @@ function logAll(level, ...messages) { }</code></pre>
   </div>
 </section>
 
-<section class="question">
-  <h2>15. Closures, timers y valores “viejos” (sin React)</h2>
+<section class="question important" id="q15">
+  <h2>15. Closures, timers y valores “viejos” (sin React) <span class="tag-important">Importante</span></h2>
   <div class="answer">
     <p>Antes de stale closures en hooks, el patrón aparece en JS puro: un callback asíncrono captura variables del scope donde se <em>creó</em>.</p>
     <pre><code>function iniciar() {

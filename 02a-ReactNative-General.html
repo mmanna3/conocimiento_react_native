@@ -19,9 +19,21 @@
 <section class="question">
   <h2>1. ¿Cómo funciona React Native internamente?</h2>
   <div class="answer">
-    <p>RN ejecuta tu código JavaScript (Hermes o JSC) en un runtime JS. React renderiza componentes a un árbol de shadow nodes (Virtual DOM adaptado). Ese árbol se traduce a vistas nativas reales: <code>UIView</code> en iOS, <code>android.view.View</code> en Android.</p>
-    <p>La comunicación JS ↔ nativo históricamente pasaba por el <strong>Bridge</strong> (serialización JSON asíncrona). Con la <strong>New Architecture</strong>, JSI permite llamadas directas C++ entre JS y módulos nativos sin serializar cada mensaje.</p>
-    <p>El UI thread nativo maneja layout y pintura; el JS thread ejecuta lógica de negocio y el render de React. Si JS está bloqueado, la UI puede seguir animando (con Reanimated en UI thread) pero interacciones que dependen de JS se sienten lentas.</p>
+    <p>
+      React Native permite escribir la lógica de la app en JavaScript mientras renderiza componentes nativos reales en iOS y Android.
+    </p>
+    
+    <p>
+      React corre sobre un runtime JS como Hermes y mantiene un árbol de componentes que luego React Native traduce a vistas nativas.
+    </p>
+    
+    <p>
+      La arquitectura vieja usaba un Bridge asíncrono entre JavaScript y nativo; la nueva arquitectura usa JSI y TurboModules para una comunicación más directa y eficiente.
+    </p>
+    
+    <p>
+      La UI se renderiza en threads nativos separados del thread de JavaScript, por eso los problemas de performance suelen aparecer cuando el JS thread se bloquea con renders pesados o lógica costosa.
+    </p>
   </div>
 </section>
 
@@ -377,6 +389,14 @@
       <tr><td>Performance testing</td><td>Menos fragmentación de devices</td><td>Probar gama baja (API 26-28)</td></tr>
     </table>
     <p>Platform-specific code: <code>Platform.OS</code>, <code>.ios.tsx</code> / <code>.android.tsx</code>, StyleSheet con Platform.select.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>29. ¿Qué es Yoga?</h2>
+  <div class="answer">
+    <p>Yoga is an embeddable layout system used in popular UI frameworks like React Native. Yoga itself is not a UI framework, and does not do any drawing itself. Yoga's only responsibility is determining the size and position of boxes.</p>
+    <p>Yoga supports a familiar subset of CSS, mostly focused on Flexbox. This gives users a familiar model, and enables sharing code between native platforms and the browser.</p>
   </div>
 </section>
 
