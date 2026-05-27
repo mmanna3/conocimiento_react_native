@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeScript</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">09 · TypeScript</span>
+  <h1>TypeScript</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Por qué usar TypeScript?</h2>
+  <div class="answer">
+    <ul>
+      <li>Errores en compile-time vs runtime en prod.</li>
+      <li>Autocomplete e IntelliSense — velocity en codebases grandes.</li>
+      <li>Refactors seguros (rename, move) con confidence.</li>
+      <li>Contratos explícitos entre módulos/equipos.</li>
+      <li>Codegen desde OpenAPI/GraphQL integra naturalmente.</li>
+      <li>RN New Architecture Codegen requiere typed specs.</li>
+    </ul>
+    <p>Costo: setup inicial, curva generics, occasional fighting the compiler — ROI positivo en equipos &gt;2 devs y apps long-lived.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Qué diferencia hay entre type e interface?</h2>
+  <div class="answer">
+    <p><strong>interface:</strong> extend/merge (declaration merging), mejor para object shapes públicos de libs, implements en clases.</p>
+    <p><strong>type:</strong> unions, intersections, mapped types, tuples, primitivos — más expresivo para composición.</p>
+    <pre><code>type Status = 'idle' | 'loading' | 'error';
+interface User { id: string; name: string; }</code></pre>
+    <p>Convención moderna: <code>interface</code> para props de componentes y APIs de objetos; <code>type</code> para unions y utility compositions. En la práctica, muchas bases usan solo <code>type</code> por consistencia.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Qué son generics?</h2>
+  <div class="answer">
+    <p>Parámetros de tipo — funciones/clases reutilizables sin perder type safety:</p>
+    <pre><code>function first&lt;T&gt;(arr: T[]): T | undefined {
+  return arr[0];
+}</code></pre>
+    <p>En React: <code>useState&lt;User | null&gt;(null)</code>, <code>FlatList&lt;Item&gt;</code>, API responses tipados. Constraints: <code>&lt;T extends { id: string }&gt;</code>.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Qué son utility types?</h2>
+  <div class="answer">
+    <p>Tipos built-in para transformar otros tipos:</p>
+    <ul>
+      <li><code>Partial&lt;T&gt;</code> — todos opcionales.</li>
+      <li><code>Pick&lt;T, K&gt;</code> / <code>Omit&lt;T, K&gt;</code> — subset.</li>
+      <li><code>Record&lt;K, V&gt;</code> — mapa keyed.</li>
+      <li><code>ReturnType&lt;typeof fn&gt;</code> — infer return.</li>
+      <li><code>Parameters&lt;typeof fn&gt;</code></li>
+      <li><code>NonNullable&lt;T&gt;</code>, <code>Extract</code>, <code>Exclude</code></li>
+    </ul>
+    <p>Evitan duplicar definiciones — DRY en tipos de API y forms.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Cómo tipar hooks?</h2>
+  <div class="answer">
+    <pre><code>function useUser(id: string) {
+  const [user, setUser] = useState&lt;User | null&gt;(null);
+  const [error, setError] = useState&lt;Error | null&gt;(null);
+  // ...
+  return { user, error, isLoading } as const;
+}
+
+type UseUserReturn = ReturnType&lt;typeof useUser&gt;;</code></pre>
+    <p>Custom hooks: exportar return type explícito si es API pública. Generics en hooks reutilizables: <code>useAsync&lt;T&gt;(fn: () =&gt; Promise&lt;T&gt;)</code>.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Cómo tipar APIs?</h2>
+  <div class="answer">
+    <ul>
+      <li>Generar desde OpenAPI: <code>openapi-typescript</code>, Orval.</li>
+      <li>Zod schema → infer: <code>type User = z.infer&lt;typeof UserSchema&gt;</code> — runtime validation + types.</li>
+      <li>Discriminated unions para responses: <code>{ ok: true, data: T } | { ok: false, error: E }</code>.</li>
+      <li>Tipar axios/fetch wrapper genérico: <code>get&lt;User&gt;('/users/1')</code>.</li>
+    </ul>
+    <p>Nunca confiar solo en types — validar en runtime datos externos (Zod en boundaries).</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Qué problemas reales resolviste con TS?</h2>
+  <div class="answer">
+    <p>Ejemplos para entrevista:</p>
+    <ul>
+      <li>Refactor masivo de navigation params — compiler encontró 40 call sites rotos.</li>
+      <li>API backend cambió field optional → error en compile antes de release.</li>
+      <li>Typed Redux slices / RTK Query codegen eliminó mismatches action payload.</li>
+      <li>Strict null checks atrapó crashes de <code>undefined.id</code> en prod.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Qué cosas de TS pueden empeorar DX?</h2>
+  <div class="answer">
+    <ul>
+      <li>Over-engineering de types (generics anidados ilegibles).</li>
+      <li><code>strict: false</code> o <code>any</code> everywhere — falsa sensación de safety.</li>
+      <li>Fighting third-party types incorrectos (@types desactualizados).</li>
+      <li>Build lento en monorepos gigantes sin project references.</li>
+      <li>Tipar mocks de tests verboso — usar Partial, satisfies, type assertions acotadas.</li>
+      <li>Migration parcial JS/TS — boundaries inconsistentes.</li>
+    </ul>
+    <p>Balance: strict mode on, pragmatismo con <code>unknown</code> over <code>any</code>, codegen donde escala.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

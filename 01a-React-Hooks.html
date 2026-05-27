@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React — Hooks</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">01a · React</span>
+  <h1>Hooks de React</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Qué problema vino a resolver useEffect?</h2>
+  <div class="answer">
+    <p>Antes de los hooks, la lógica con efectos secundarios (fetch, suscripciones, timers, manipulación del DOM) se repartía entre <code>componentDidMount</code>, <code>componentDidUpdate</code> y <code>componentWillUnmount</code>. Eso fragmentaba el código por <em>ciclo de vida</em> en lugar de por <em>responsabilidad</em>.</p>
+    <p><code>useEffect</code> unifica eso en un solo lugar: declarás qué efecto querés y cuándo debe re-ejecutarse (dependency array). Además permite usar efectos en componentes funcionales sin HOCs ni render props, y composar lógica en custom hooks reutilizables.</p>
+    <p>En una entrevista senior: mencioná que no reemplaza toda la lógica de clases — reemplaza el <em>modelo mental</em> de “montaje/actualización/desmontaje” por “sincronizar con algo externo al render”.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. Diferencia entre useEffect y useLayoutEffect</h2>
+  <div class="answer">
+    <p>Ambos tienen la misma API, pero el timing es distinto:</p>
+    <ul>
+      <li><strong>useEffect</strong> — corre <em>después</em> de que el browser pinta. No bloquea el paint. Ideal para fetch, suscripciones, analytics, la mayoría de efectos.</li>
+      <li><strong>useLayoutEffect</strong> — corre <em>después</em> del DOM update pero <em>antes</em> del paint. Bloquea la pintura hasta que termina.</li>
+    </ul>
+    <p>Usá <code>useLayoutEffect</code> cuando necesitás medir o mutar el DOM y evitar un flash visual (ej: posicionar un tooltip, sincronizar scroll, animaciones que dependen de medidas). En SSR puede generar warnings porque no hay layout en el servidor — en esos casos preferí <code>useEffect</code> o un guard.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Cuándo usar useMemo?</h2>
+  <div class="answer">
+    <p><code>useMemo</code> memoriza el <em>resultado</em> de un cálculo costoso entre renders, recalculando solo cuando cambian las dependencias.</p>
+    <p>Usalo cuando:</p>
+    <ul>
+      <li>El cálculo es genuinamente caro (filtrar/ordenar miles de items, transformaciones pesadas).</li>
+      <li>Necesitás referential equality estable para pasar props a un hijo memoizado (<code>React.memo</code>) o como dependencia de otro hook.</li>
+    </ul>
+    <p>No lo uses por default en cada variable derivada — el propio memo tiene costo (comparar deps + guardar valor).</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Cuándo usar useCallback?</h2>
+  <div class="answer">
+    <p><code>useCallback</code> memoriza la <em>función</em> en sí (referencia estable), no su resultado.</p>
+    <p>Usalo cuando:</p>
+    <ul>
+      <li>Pasás callbacks a hijos envueltos en <code>React.memo</code> y el hijo se re-renderiza innecesariamente por referencia nueva.</li>
+      <li>La función es dependencia de <code>useEffect</code>, <code>useMemo</code> u otro hook que reacciona a identidad.</li>
+      <li>Registrás/desregistrás listeners donde la misma referencia importa.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Cuándo NO usar useMemo/useCallback?</h2>
+  <div class="answer">
+    <p>Evitalos cuando:</p>
+    <ul>
+      <li>El cálculo es trivial (concatenar strings, sumar dos números).</li>
+      <li>El componente hijo no está memoizado — la referencia estable no evita ningún render.</li>
+      <li>Optimizás prematuramente sin evidencia de problema (Profiler, métricas).</li>
+      <li>Complican la lectura del código más de lo que ahorran.</li>
+    </ul>
+    <p>Regla práctica de senior: medí primero, optimizá después. El costo de memoización + deps incorrectas puede ser peor que re-renderizar un componente barato.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Qué problemas genera un dependency array incorrecto?</h2>
+  <div class="answer">
+    <p>Un dependency array mal armado causa dos clases de bugs:</p>
+    <ul>
+      <li><strong>Deps faltantes</strong> → stale closures: el efecto o callback usa valores viejos del render anterior (ej: contador que siempre suma 1 en lugar del valor actual).</li>
+      <li><strong>Deps de más o inestables</strong> → re-ejecuciones innecesarias, loops infinitos (objetos/funciones recreadas cada render), o fetch duplicados.</li>
+    </ul>
+    <p>El linter <code>react-hooks/exhaustive-deps</code> ayuda pero no reemplaza el criterio. Para funciones/objetos como deps, estabilizá con <code>useCallback</code>/<code>useMemo</code> o mové la lógica dentro del efecto.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Qué es un stale closure?</h2>
+  <div class="answer">
+    <p>Una <em>stale closure</em> ocurre cuando una función “captura” variables de un render anterior y sigue usándolas aunque el state/props ya cambió.</p>
+    <p>Ejemplo clásico: un <code>setInterval</code> dentro de <code>useEffect([])</code> que lee <code>count</code> — siempre ve el valor inicial porque la closure no se recreó.</p>
+    <p>Soluciones:</p>
+    <ul>
+      <li>Incluir la variable en el dependency array.</li>
+      <li>Usar la forma funcional de setState: <code>setCount(c =&gt; c + 1)</code>.</li>
+      <li>Guardar el valor actual en un <code>useRef</code> si necesitás la última versión sin re-suscribirte.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Cómo evitar renders innecesarios?</h2>
+  <div class="answer">
+    <p>Estrategias, de más impacto a más granular:</p>
+    <ul>
+      <li><strong>Arquitectura de state</strong> — state lo más local posible; evitar contextos que cambian frecuentemente para todo el árbol.</li>
+      <li><strong>React.memo</strong> — en componentes puros con props estables.</li>
+      <li><strong>useMemo / useCallback</strong> — para props derivadas y callbacks hacia hijos memoizados.</li>
+      <li><strong>Split de context</strong> — separar state y dispatch, o múltiples contextos por dominio.</li>
+      <li><strong>Virtualización</strong> — en listas largas (FlatList en RN).</li>
+    </ul>
+    <p>Siempre validá con React DevTools Profiler o Flipper antes de optimizar.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>9. ¿Qué pasa cuando cambia el state?</h2>
+  <div class="answer">
+    <p>Cuando llamás a un setter de state (<code>setState</code>, <code>useState</code>, <code>useReducer</code>):</p>
+    <ol>
+      <li>React encola la actualización (con batching en event handlers y, desde React 18, también en promises/timeouts).</li>
+      <li>En el próximo render, React ejecuta tu función de componente con el nuevo state.</li>
+      <li>Compara el nuevo Virtual DOM con el anterior (reconciliation).</li>
+      <li>Calcula el diff mínimo y aplica cambios al DOM nativo (o a la vista en RN).</li>
+      <li>Corren effects cuyas dependencias cambiaron (después del paint, salvo layout effects).</li>
+    </ol>
+    <p>El state update es <em>asíncrono</em> — no podés leer el nuevo valor inmediatamente después del setter en el mismo tick.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>10. ¿Cómo funciona el ciclo de render?</h2>
+  <div class="answer">
+    <p>Render phase (puro, puede interrumpirse en Concurrent Mode):</p>
+    <ul>
+      <li>React invoca el componente → obtiene elementos React (Virtual DOM).</li>
+      <li>Reconciliation: compara con el árbol anterior, decide qué conservar/mover/crear/eliminar según type, key y props.</li>
+    </ul>
+    <p>Commit phase (no interrumpible):</p>
+    <ul>
+      <li>Aplica cambios al host (DOM / native views).</li>
+      <li>Ejecuta <code>useLayoutEffect</code> / <code>componentDidMount|Update</code>.</li>
+      <li>Browser pinta.</li>
+      <li>Ejecuta <code>useEffect</code>.</li>
+    </ul>
+    <p>En React 18+, updates pueden ser concurrentes: React puede preparar múltiples versiones y priorizar interacciones del usuario.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>11. ¿Qué diferencia hay entre state y refs?</h2>
+  <div class="answer">
+    <table>
+      <tr><th>State</th><th>Ref</th></tr>
+      <tr><td>Cambiar state dispara re-render</td><td>Cambiar <code>.current</code> NO re-renderiza</td></tr>
+      <tr><td>Inmutable desde la perspectiva del render (nuevo valor → nuevo render)</td><td>Mutable entre renders</td></tr>
+      <tr><td>Para UI que debe reflejarse en pantalla</td><td>Para valores imperativos: DOM nodes, timers IDs, valores previos, flags</td></tr>
+    </table>
+    <p>Los refs persisten entre renders igual que el state, pero son una “caja mutable” fuera del flujo declarativo.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>12. ¿Cuándo usar useRef?</h2>
+  <div class="answer">
+    <ul>
+      <li>Referencia a un elemento DOM o componente nativo (<code>TextInput.focus()</code> en RN).</li>
+      <li>Guardar IDs de timers/intervals/subscriptions para cleanup.</li>
+      <li>Almacenar el valor anterior de una prop/state (patrón <code>usePrevious</code>).</li>
+      <li>Flags imperativos que no deben causar render (ej: “ya se disparó analytics”).</li>
+      <li>Evitar stale closures manteniendo la última versión de un callback.</li>
+    </ul>
+    <p>No uses ref como atajo para evitar re-renders de UI que <em>sí</em> debería actualizarse — eso es un bug.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>13. ¿Qué hace realmente React.memo?</h2>
+  <div class="answer">
+    <p><code>React.memo</code> es un HOC que memoriza el <em>resultado del render</em> de un componente funcional. En el siguiente render del padre, compara props nuevas vs anteriores (shallow compare por default, o custom con <code>arePropsEqual</code>).</p>
+    <p>Si las props son iguales → React reutiliza el último resultado y <strong>salta</strong> el render del hijo.</p>
+    <p>Importante: solo ayuda si el padre re-renderiza frecuentemente y el hijo es costoso o tiene muchos descendientes. No memoices todo — la comparación también cuesta. En RN, combiná con props estables (<code>useCallback</code>) y evitá pasar objetos inline.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>14. ¿Cómo debuggear un render infinito?</h2>
+  <div class="answer">
+    <p>Causas típicas:</p>
+    <ul>
+      <li><code>useEffect</code> sin deps o con deps que cambian cada render → setState dentro del effect → loop.</li>
+      <li>setState en el cuerpo del componente (no en handler/effect).</li>
+      <li>Objeto/array nuevo como dependencia sin memoizar.</li>
+      <li>Context provider que recrea <code>value={{...}}</code> cada render.</li>
+    </ul>
+    <p>Debugging:</p>
+    <ul>
+      <li>React DevTools → “Highlight updates”.</li>
+      <li>Agregar <code>console.log</code> al inicio del componente sospechoso.</li>
+      <li>Revisar stack del error “Maximum update depth exceeded”.</li>
+      <li>Comentar effects uno por uno.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>15. ¿Qué patrones usás para custom hooks?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Extracción por responsabilidad</strong> — <code>useAuth</code>, <code>useDebounce</code>, <code>useFetch</code>: un hook = un concern.</li>
+      <li><strong>Composición</strong> — hooks pequeños que se combinan (<code>useUser</code> usa <code>useQuery</code> + <code>useAuth</code>).</li>
+      <li><strong>Return estable</strong> — devolver tuplas <code>[state, actions]</code> o objetos; si devolvés objetos, considerá <code>useMemo</code> para el return si causa re-renders.</li>
+      <li><strong>Encapsular suscripciones</strong> — el hook maneja subscribe/unsubscribe en un effect con cleanup.</li>
+      <li><strong>Naming</strong> — siempre prefijo <code>use</code>; reglas de hooks aplican (solo top-level, solo en React functions).</li>
+      <li><strong>Testing</strong> — testeá con <code>renderHook</code> de Testing Library.</li>
+    </ul>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

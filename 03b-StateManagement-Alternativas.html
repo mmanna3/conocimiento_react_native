@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>State Management — Alternativas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">03b · State Management</span>
+  <h1>Alternativas de State Management</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Cuándo usarías Zustand?</h2>
+  <div class="answer">
+    <ul>
+      <li>State global moderado sin boilerplate de Redux.</li>
+      <li>Necesitás selectors y suscripciones granulares fuera de React (stores vanilla).</li>
+      <li>Prototipado rápido con TypeScript first-class.</li>
+      <li>Migración gradual — no requiere providers (aunque podés usar context para testing).</li>
+    </ul>
+    <p>No ideal cuando: necesitás middleware ecosystem maduro de Redux, time-travel debugging crítico, o el equipo ya está estandarizado en RTK Query + slices.</p>
+    <p>API minimal: <code>create((set) =&gt; ({ count: 0, inc: () =&gt; set(s =&gt; ({ count: s.count+1 })) }))</code></p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Qué opinás de MobX?</h2>
+  <div class="answer">
+    <p>MobX usa observables reactivos — mutás state “directamente” y MobX trackea dependencias y re-renderiza automáticamente. Menos boilerplate que Redux, modelo OOP/reactivo.</p>
+    <p><strong>Pros:</strong> DX rápida para state complejo con muchas derivaciones; menos código.</p>
+    <p><strong>Cons:</strong> Magia implícita (harder to debug sin disciplina); menos estándar en RN hoy; curva para equipos acostumbrados a flux unidireccional.</p>
+    <p>Opinión senior equilibrada: válido en codebases existentes MobX; para greenfield RN prefiero Zustand o RTK por predictabilidad y hiring pool.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Qué usarías para server state?</h2>
+  <div class="answer">
+    <p><strong>TanStack Query (React Query)</strong> — default recommendation para cache server-side: stale-while-revalidate, dedup, pagination, infinite queries, optimistic updates.</p>
+    <p>Alternativas: RTK Query (si ya en Redux), SWR (web-focused, menos features), Apollo Client (GraphQL).</p>
+    <p>No uses Redux/Context/Zustand como cache de API manual — reinventás invalidation, dedup, background refetch.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Qué diferencia hay entre UI state y server state?</h2>
+  <div class="answer">
+    <table>
+      <tr><th>UI State</th><th>Server State</th></tr>
+      <tr><td>Owned by cliente (modal, tab, form draft)</td><td>Owned by servidor, cache en cliente</td></tr>
+      <tr><td>Sincrónico, efímero</td><td>Asíncrono, puede quedar stale</td></tr>
+      <tr><td>useState, Zustand, Context</td><td>React Query, RTK Query</td></tr>
+      <tr><td>No necesita refetch</td><td>Invalidation, retry, sync</td></tr>
+    </table>
+    <p>Separarlos clarifica arquitectura y evita mezclar <code>isLoading</code> de fetch con <code>isModalOpen</code> en el mismo slice.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Qué ventajas tiene React Query/TanStack Query?</h2>
+  <div class="answer">
+    <ul>
+      <li>Cache key-based con TTL (staleTime, gcTime).</li>
+      <li>Background refetch on focus/reconnect/mount.</li>
+      <li>Deduplicación automática de requests paralelos.</li>
+      <li>Hooks declarativos: loading, error, data out of the box.</li>
+      <li>Mutations con optimistic updates e invalidation.</li>
+      <li>Pagination/infinite scroll primitives.</li>
+      <li>Devtools excelentes.</li>
+      <li>Framework agnostic core (TanStack Query v5).</li>
+    </ul>
+    <p>En RN: integrar con NetInfo para <code>onlineManager</code>, persist con async storage para offline.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

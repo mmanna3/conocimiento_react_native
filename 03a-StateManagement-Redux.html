@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>State Management — Redux</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">03a · State Management</span>
+  <h1>Redux</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Qué problema resuelve Redux?</h2>
+  <div class="answer">
+    <p>Redux centraliza state global predecible con un flujo unidireccional: UI dispatch actions → reducers producen nuevo state → UI se suscribe.</p>
+    <p>Resuelve: state compartido complejo entre muchas pantallas, debugging con action log, time-travel, middleware para side effects, state predecible e inmutable.</p>
+    <p>No resuelve server cache bien por sí solo (ahí RTK Query); no reemplaza state local de forms.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Cuándo NO usar Redux?</h2>
+  <div class="answer">
+    <ul>
+      <li>Apps pequeñas con poco state compartido → Context + useState alcanza.</li>
+      <li>Principalmente server state → React Query solo.</li>
+      <li>State efímero de UI (modal open) → local.</li>
+      <li>Equipo pequeño sin necesidad de devtools/time-travel.</li>
+    </ul>
+    <p>Red flag: Redux para todo incluyendo API cache manual — mucho boilerplate sin beneficio.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Qué diferencia hay entre Redux Toolkit y Redux clásico?</h2>
+  <div class="answer">
+    <p><strong>Redux clásico:</strong> switch-case reducers, action creators manuales, configureStore manual, mucho boilerplate, Immer no incluido.</p>
+    <p><strong>RTK:</strong> <code>createSlice</code> (reducers + actions auto), <code>configureStore</code> con defaults (thunk, devtools), Immer built-in (mutación “sintáctica”), <code>createAsyncThunk</code>, RTK Query integrado.</p>
+    <p>RTK es el standard recomendado oficialmente — Redux clásico solo en legacy codebases.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Qué es un reducer?</h2>
+  <div class="answer">
+    <p>Función pura <code>(state, action) =&gt; newState</code>. Dado el state actual y una action tipada, devuelve el próximo state sin mutar el anterior.</p>
+    <p>Debe ser determinística — no fetch, no Date.now(), no random. Side effects van en middleware/thunks/listeners.</p>
+    <p>Con Immer (RTK), escribís lógica mutante que Immer traduce a updates inmutables.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Qué significa que Redux sea immutable?</h2>
+  <div class="answer">
+    <p>Cada transición produce un nuevo objeto state (shallow copy en el path cambiado). React-Redux compara referencias para decidir re-renders; mutación directa rompe change detection y time-travel debugging.</p>
+    <p>Immer facilita inmutabilidad sin spread hell: <code>state.items.push(item)</code> bajo hood es inmutable.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Qué es un middleware?</h2>
+  <div class="answer">
+    <p>Capa que intercepta actions entre dispatch y reducer. Cadena de funciones <code>store =&gt; next =&gt; action =&gt; ...</code>.</p>
+    <p>Usos: logging, analytics, async (thunk), crash reporting, persist (redux-persist), custom authorization gates.</p>
+    <p>RTK <code>configureStore</code> incluye thunk por default; podés agregar custom middleware en el array.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Cómo funciona Redux Thunk?</h2>
+  <div class="answer">
+    <p>Middleware que permite dispatch de <em>funciones</em> además de plain objects. La función recibe <code>(dispatch, getState)</code> y puede hacer async:</p>
+    <pre><code>dispatch(async (dispatch, getState) =&gt; {
+  dispatch(setLoading(true));
+  const data = await api.fetch();
+  dispatch(setData(data));
+});</code></pre>
+    <p>RTK prefiere <code>createAsyncThunk</code> para estados pending/fulfilled/rejected estandarizados. Thunk sigue válido para lógica custom.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Qué ventajas tiene RTK Query?</h2>
+  <div class="answer">
+    <ul>
+      <li>Cache automático, deduplicación, invalidation tags.</li>
+      <li>Loading/error states generados.</li>
+      <li>Hooks auto-generados: <code>useGetUserQuery(id)</code>.</li>
+      <li>Optimistic updates, polling, prefetch.</li>
+      <li>Integración Redux DevTools.</li>
+      <li>Elimina 70%+ del boilerplate de fetch manual en Redux.</li>
+    </ul>
+    <p>Compite con TanStack Query — RTK Query si ya tenés Redux; TanStack si querés server state sin Redux.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>9. ¿Redux vs Context API?</h2>
+  <div class="answer">
+    <table>
+      <tr><th>Context</th><th>Redux</th></tr>
+      <tr><td>Built-in, simple</td><td>Lib externa, más setup</td></tr>
+      <tr><td>Re-render todos consumers</td><td>Selectors granulares con react-redux</td></tr>
+      <tr><td>Sin middleware/devtools avanzados</td><td>DevTools, middleware, ecosystem</td></tr>
+      <tr><td>Bien para theme, locale, auth simple</td><td>Bien para state complejo frecuente</td></tr>
+    </table>
+    <p>No son mutuamente excluyentes — Context para DI/theme, Redux/Zustand para app state denso.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>10. ¿Cómo evitar over-rendering con Redux?</h2>
+  <div class="answer">
+    <ul>
+      <li><code>useSelector</code> con selectors que retornan solo la slice necesaria.</li>
+      <li><code>createSelector</code> (Reselect) para memoizar derivaciones.</li>
+      <li>Evitar selectores que retornan objetos nuevos cada vez.</li>
+      <li>Split slices — componentes suscritos solo a su dominio.</li>
+      <li><code>React.memo</code> en hijos con props de Redux estables.</li>
+      <li>RTK Query hooks ya optimizan suscripciones por endpoint+args.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>11. ¿Cómo estructurarías slices?</h2>
+  <div class="answer">
+    <p>Por dominio de negocio, no por tipo técnico:</p>
+    <pre><code>store/
+  slices/
+    authSlice.ts
+    cartSlice.ts
+  api/
+    usersApi.ts   # RTK Query
+  index.ts        # configureStore</code></pre>
+    <p>Cada slice: state inicial, reducers sync, extraReducers para thunks, selectors colocados en el mismo file o <code>selectors.ts</code>. Normalizar entities relacionales (users byId) si hay relaciones complejas — o delegar a RTK Query cache.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>12. ¿Qué errores comunes viste?</h2>
+  <div class="answer">
+    <ul>
+      <li>Guardar server data duplicado en slices cuando RTK Query ya cachea.</li>
+      <li>God slice con todo el state de la app.</li>
+      <li>Selectors no memoizados retornando <code>{ a, b }</code> inline.</li>
+      <li>Side effects en reducers.</li>
+      <li>Mutación directa sin Immer en reducers legacy.</li>
+      <li>Over-engineering Redux para apps que solo necesitan React Query + Context.</li>
+    </ul>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

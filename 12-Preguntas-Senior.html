@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preguntas Senior — Behavioral</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">12 · Senior</span>
+  <h1>Preguntas típicas de Senior</h1>
+  <p class="section-note">Respuestas en formato STAR. Adaptá cada historia con tus proyectos reales.</p>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. Contame un problema técnico difícil que resolviste</h2>
+  <div class="answer">
+    <p><strong>Estructura STAR:</strong></p>
+    <ul>
+      <li><strong>Situación:</strong> App RN con scroll a 20 FPS en feed de 10k usuarios activos; quejas en reviews.</li>
+      <li><strong>Tarea:</strong> Identificar cuello de botella y recuperar 60 FPS sin rewrite completo.</li>
+      <li><strong>Acción:</strong> Profiling con Flipper → re-renders en FlatList por context global; migré a FlashList, memo en rows, separé context, moví animaciones a Reanimated.</li>
+      <li><strong>Resultado:</strong> FPS estable 58-60, crash rate sin cambio, deploy en 2 sprints.</li>
+    </ul>
+    <p>Claves: problema concreto, tu rol, herramientas, trade-offs, métrica de impacto.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. Contame un bug complicado</h2>
+  <div class="answer">
+    <p>Ejemplo plantilla:</p>
+    <ul>
+      <li><strong>Síntoma:</strong> Logout aleatorio en 0.5% sesiones, solo Android, solo release.</li>
+      <li><strong>Investigación:</strong> No reproducía en debug; Crashlytics breadcrumbs mostraron 401 en refresh; race en interceptor con requests paralelos.</li>
+      <li><strong>Fix:</strong> Mutex en refresh token + queue de requests; single-flight pattern.</li>
+      <li><strong>Lección:</strong> Tests de concurrencia; simular release builds en CI.</li>
+    </ul>
+    <p>Mostrá método sistemático, no suerte.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. Contame una decisión arquitectónica importante</h2>
+  <div class="answer">
+    <p>Ejemplo: “Migramos de Redux manual a TanStack Query + Zustand porque el 70% del Redux era cache de API con bugs de stale data. Trade-off: dos libs nuevas y curva de aprendizaje. Ganamos: -40% boilerplate, menos bugs de sync, onboarding más simple para juniors.”</p>
+    <p>Incluí: alternativas consideradas, por qué descartadas, costo de migración, cómo midieron éxito.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. Contame un conflicto técnico con el equipo</h2>
+  <div class="answer">
+    <p>Ejemplo: “PM quería WebView para checkout rápido; yo empujaba native por UX y PCI scope. Hicimos spike de 3 días: WebView tenía bugs de keyboard en iOS. Presentamos datos al PM, acordamos native con timeline +1 sprint. Disagree and commit del equipo.”</p>
+    <p>Evitar: “tenían razón yo no”. Mostrar colaboración y data-driven resolution.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. Contame una mala decisión técnica que tomaste</h2>
+  <div class="answer">
+    <p>Ejemplo: “Introduje MobX en un proyecto Redux existente ‘por velocidad’ — terminamos con dos patterns de state, confusion del equipo, 3 meses para consolidar. Aprendí: alinear con el equipo antes de introducir paradigmas; migraciones completas &gt; híbridos eternos.”</p>
+    <p>Honestidad + aprendizaje concreto. No elegir algo que te haga ver incompetente sin redención.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Cómo estimás tareas?</h2>
+  <div class="answer">
+    <ul>
+      <li>Descomponer en subtareas &lt; 1 día.</li>
+      <li>Incluir: dev, tests, review, QA, edge cases, unknowns buffer (×1.3-1.5).</li>
+      <li>Referencias históricas (“similar al feature X que tomó 5 días”).</li>
+      <li>Spike timeboxed si incertidumbre alta.</li>
+      <li>T-shirt sizing en refinamiento, puntos finos en planning.</li>
+      <li>Comunicar riesgos upfront — “estimo 3 días si API está lista; +2 si no”.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Cómo manejás presión o deadlines?</h2>
+  <div class="answer">
+    <ul>
+      <li>Clarificar scope mínimo viable vs nice-to-have.</li>
+      <li>Comunicar early si el deadline es irreal — proponer alternativas.</li>
+      <li>Feature flags para ship parcial seguro.</li>
+      <li>No sacrificar tests en critical paths; sí defer polish.</li>
+      <li>Evitar overtime crónico — sostenibilidad del equipo.</li>
+      <li>Post-release: pagar deuda si hubo shortcuts documentados.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Cómo balanceás velocidad vs calidad?</h2>
+  <div class="answer">
+    <p>No es binario — calidad <em>habilita</em> velocidad a largo plazo.</p>
+    <ul>
+      <li>Critical paths (auth, payments): calidad non-negotiable.</li>
+      <li>Prototypes: velocidad, código throwaway o behind flag.</li>
+      <li>Definition of Done compartido: tests, review, no known P0 bugs.</li>
+      <li>Automatizar lo repetitivo (CI, codegen) para ganar velocidad sin corner cuts.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>9. ¿Cómo liderás técnicamente sin ser manager?</h2>
+  <div class="answer">
+    <ul>
+      <li>Ownership de áreas técnicas (navigation, design system).</li>
+      <li>ADRs, RFCs para decisiones cross-team.</li>
+      <li>Mentoring, pair programming, code review culture.</li>
+      <li>Unblock juniors — ser approachable.</li>
+      <li>Representar al equipo con PM/stakeholders traduciendo trade-offs.</li>
+      <li>Initiative: mejoras de DX, CI, observability sin que te lo pidan.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>10. ¿Qué hacés cuando no estás de acuerdo con una decisión?</h2>
+  <div class="answer">
+    <ol>
+      <li>Expresar concerns con datos en forum apropiado (tech review).</li>
+      <li>Proponer alternativa concreta, no solo criticar.</li>
+      <li>Timebox debate — si no hay consenso, escalar a decisor con doc de trade-offs.</li>
+      <li>Una vez decidido: commit fully, no sabotear ni “I told you so”.</li>
+      <li>Definir criterios de revisión (“revisitamos en 3 meses si metric X empeora”).</li>
+    </ol>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

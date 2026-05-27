@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Native — Arquitectura</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">02c · React Native</span>
+  <h1>Arquitectura Enterprise</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Cómo organizarías una app enterprise?</h2>
+  <div class="answer">
+    <p>Principios:</p>
+    <ul>
+      <li><strong>Feature modules</strong> autocontenidos con API clara hacia afuera.</li>
+      <li><strong>Shared kernel</strong> — design system, networking, auth, utils.</li>
+      <li><strong>Boundaries enforced</strong> — ESLint import rules, Nx module boundaries.</li>
+      <li><strong>Testing pyramid</strong> — unit en domain, integration en features, E2E en critical paths.</li>
+      <li><strong>Observability</strong> desde día 1 — logging, crash, performance budgets.</li>
+      <li><strong>Documentación</strong> — ADRs, onboarding README, diagramas de navegación y data flow.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Feature-based folders o layer-based?</h2>
+  <div class="answer">
+    <p><strong>Feature-based</strong> (preferido en mobile): <code>features/checkout/</code> contiene screens, hooks, components, api de checkout. Escala con equipos (ownership por feature) y reduce cross-feature coupling.</p>
+    <p><strong>Layer-based</strong>: <code>screens/</code>, <code>components/</code>, <code>services/</code> — todo mezclado, carpetas gigantes, imports cruzados.</p>
+    <p>Híbrido común: feature-based + <code>shared/</code> layer para código transversal. Evitar “big ball of mud” en <code>components/</code> con 200 archivos.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Dónde poner lógica de negocio?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Domain layer</strong> — funciones puras: validaciones, cálculos, reglas (testeables sin React).</li>
+      <li><strong>Custom hooks</strong> — orquestación React-specific (useCheckout, useCart).</li>
+      <li><strong>NO en components de UI</strong> — screens delgadas, presentational vs container.</li>
+      <li><strong>NO en Redux reducers</strong> si es lógica compleja — extraer a domain services invocados por thunks.</li>
+    </ul>
+    <p>Clean Architecture adaptada: entities/use cases en TS puro; adapters (API, storage); UI en React.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Cómo desacoplás networking?</h2>
+  <div class="answer">
+    <ul>
+      <li>Cliente HTTP único (axios/fetch wrapper) con interceptors, base URL, auth injection.</li>
+      <li>API modules por dominio: <code>userApi.getProfile()</code> — screens no conocen URLs.</li>
+      <li>TanStack Query como capa de cache/sync — hooks <code>useUserProfile()</code> consumen API.</li>
+      <li>Tipos compartidos (OpenAPI codegen, Zod schemas).</li>
+      <li>Mock layer para tests y desarrollo offline (MSW).</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Cómo manejás dependency injection?</h2>
+  <div class="answer">
+    <p>En frontend/mobile DI es más ligero que en backend:</p>
+    <ul>
+      <li><strong>React Context</strong> para servicios (ApiClient, Analytics) — test con providers mock.</li>
+      <li><strong>Constructor injection en hooks</strong> — <code>useAuth(authService)</code> en tests.</li>
+      <li><strong>Module factories</strong> — exportar singleton configurable en app bootstrap.</li>
+      <li>Evitar service locator global sin interfaces — dificulta testing.</li>
+    </ul>
+    <p>Librerías como Inversify existen pero son raras en RN; Context + composition suele alcanzar.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Cómo evitás tight coupling?</h2>
+  <div class="answer">
+    <ul>
+      <li>Import rules: features no importan internals de otras features — solo public API (<code>features/auth/index.ts</code>).</li>
+      <li>Event bus / navigation params con IDs, no objetos acoplados.</li>
+      <li>Interfaces para servicios externos (storage, analytics).</li>
+      <li>Evitar singletons mutables globales.</li>
+      <li>Code review enfocado en dependency direction (hacia adentro del dominio).</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Cómo harías una app escalable?</h2>
+  <div class="answer">
+    <ul>
+      <li>Modularización por feature con equipos aligned.</li>
+      <li>Design system compartido — consistencia y velocity.</li>
+      <li>State strategy clara (local vs server vs global).</li>
+      <li>CI/CD con builds paralelos, lint, tests, size budgets.</li>
+      <li>Feature flags para releases incrementales.</li>
+      <li>Performance budgets en listas y startup.</li>
+      <li>Monorepo si múltiples apps white-label comparten código.</li>
+      <li>Deuda técnica visible y tiempo asignado por sprint.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Qué decisiones arquitectónicas tomaste en trabajos anteriores?</h2>
+  <div class="answer">
+    <p>Prepará 2-3 historias con formato STAR:</p>
+    <ol>
+      <li><strong>Contexto</strong> — tamaño del equipo, app, constraints.</li>
+      <li><strong>Decisión</strong> — ej: migrar de Redux clásico a RTK Query; adoptar Expo + EAS; feature-based refactor.</li>
+      <li><strong>Trade-offs</strong> — qué sacrificaste y por qué.</li>
+      <li><strong>Resultado</strong> — métricas (build time -40%, crash rate, velocity).</li>
+    </ol>
+    <p>Ejemplo: “Separamos server state (React Query) de UI state (Zustand) porque Redux tenía 80% boilerplate de cache manual y re-renders en cada fetch.”</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

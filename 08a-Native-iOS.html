@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Native — iOS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">08a · Native Side</span>
+  <h1>iOS / Xcode / Fastlane</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Qué hace Fastlane?</h2>
+  <div class="answer">
+    <p>Fastlane automatiza tareas de release mobile: builds, screenshots, signing, upload a TestFlight/App Store, beta distribution.</p>
+    <p>Lanes comunes: <code>match</code> (certificados/profiles en repo cifrado), <code>gym</code> (build), <code>pilot</code> (TestFlight), <code>deliver</code> (App Store metadata).</p>
+    <p>Alternativa moderna: EAS Build/Submit de Expo que abstrae mucho de esto. Fastlane sigue estándar en bare RN enterprise con control fino.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Cómo automatizar releases?</h2>
+  <div class="answer">
+    <ol>
+      <li>CI trigger en tag o merge a release branch.</li>
+      <li>Bump version/build number automático.</li>
+      <li>Run tests + lint.</li>
+      <li>Build signed IPA (Fastlane/EAS).</li>
+      <li>Upload TestFlight → QA approval → phased release App Store.</li>
+      <li>Slack notification + changelog desde commits convencionales.</li>
+    </ol>
+    <p>Signing certs via match o App Store Connect API keys (no password 2FA manual en CI).</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Qué son provisioning profiles?</h2>
+  <div class="answer">
+    <p>Archivo que vincula: App ID + certificado de signing + device IDs (development/ad hoc) o App Store distribution. Le dice a iOS que tu app está autorizada para instalarse/ejecutarse con esas capabilities (push, associated domains, etc.).</p>
+    <p>Tipos: Development, Ad Hoc, App Store, Enterprise. Expiran — renovación anual típica con certificados.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Qué es un signing certificate?</h2>
+  <div class="answer">
+    <p>Certificado criptográfico (Apple Development / Distribution) que firma el binary. iOS verifica la firma antes de ejecutar. Development cert para debug en devices registrados; Distribution para TestFlight y App Store.</p>
+    <p>Private key en Keychain local o CI (match encrypted repo). Perder la key = regenerar cert y reprovisionar.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Qué diferencias hay entre debug y release?</h2>
+  <div class="answer">
+    <table>
+      <tr><th>Debug</th><th>Release</th></tr>
+      <tr><td>Símbolos de debug, Metro bundler</td><td>Bundle embebido, minificado</td></tr>
+      <tr><td>Sin optimizaciones LLVM</td><td>Optimizaciones -Os/-O2</td></tr>
+      <tr><td>Dev menu, Flipper</td><td>Strip debug, Hermes bytecode</td></tr>
+      <tr><td>Development signing</td><td>Distribution signing</td></tr>
+      <tr><td>Assertions activas</td><td>__DEV__ false</td></tr>
+    </table>
+    <p>Bugs que solo aparecen en release: ProGuard-like stripping, timing, Hermes differences — siempre testear release builds antes de store.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Cómo investigás un crash de iOS?</h2>
+  <div class="answer">
+    <ul>
+      <li>Xcode Organizer → Crashes (symbolicated con dSYM).</li>
+      <li>Subir dSYM a Sentry/Crashlytics en CI.</li>
+      <li>Reproducir con Address Sanitizer / Zombie Objects en debug.</li>
+      <li>Log console + Instruments (Zombies, Leaks).</li>
+      <li>Identificar si es nativo (objc exception) vs JS (Hermes stack).</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Qué experiencia tenés tocando código nativo?</h2>
+  <div class="answer">
+    <p>Framework de respuesta honesta:</p>
+    <ul>
+      <li><strong>Bridge modules</strong> — exponer SDK nativo a JS (Swift/ObjC).</li>
+      <li><strong>Config nativa</strong> — Info.plist, entitlements, AppDelegate changes.</li>
+      <li><strong>Debugging</strong> — crashes en módulos third-party, pod conflicts.</li>
+      <li><strong>Codegen / TurboModules</strong> — specs para New Architecture.</li>
+    </ul>
+    <p>Si experiencia limitada: “Sé leer y modificar integraciones existentes, colaboro con iOS dev para features nativas nuevas, domino el pipeline de build/release.”</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Cómo funciona CocoaPods?</h2>
+  <div class="answer">
+    <p>Gestor de dependencias iOS. <code>Podfile</code> declara pods → <code>pod install</code> genera <code>.xcworkspace</code> con pods integrados. RN autolinking registra pods de node_modules automáticamente.</p>
+    <p>Problemas comunes: version conflicts, stale Pods cache, M1/M2 arch issues (<code>ffi</code>, <code>pod repo update</code>), deployment target mismatch. Fix: <code>pod deintegrate && pod install</code>, limpiar DerivedData.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>9. ¿Qué problemas típicos viste en iOS builds?</h2>
+  <div class="answer">
+    <ul>
+      <li>Signing/provisioning profile expired or wrong bundle ID.</li>
+      <li>Pod version conflict post RN upgrade.</li>
+      <li>Module 'React' not found — header search paths.</li>
+      <li>Bitcode/architecture warnings (Apple Silicon simulators).</li>
+      <li>Privacy manifest / required reason APIs (Apple compliance 2024+).</li>
+      <li>Associated domains / push capability missing in entitlements.</li>
+    </ul>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

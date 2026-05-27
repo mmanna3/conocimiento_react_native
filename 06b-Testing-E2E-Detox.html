@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testing — Detox / E2E</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">06b · Testing</span>
+  <h1>Detox / E2E</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Qué ventajas tiene Detox?</h2>
+  <div class="answer">
+    <ul>
+      <li>Gray-box testing — sincronización automática con idle de RN (no sleeps manuales).</li>
+      <li>API declarativa: <code>element(by.id('login')).tap()</code>.</li>
+      <li>Corre en simulador/emulador real — alta confianza.</li>
+      <li>Integración CI (EAS, Bitrise, GitHub Actions).</li>
+      <li>Matchers expresivos (<code>toBeVisible</code>, <code>toHaveText</code>).</li>
+    </ul>
+    <p>Ideal para smoke tests y critical user journeys en RN.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Qué diferencia hay entre Detox y Appium?</h2>
+  <div class="answer">
+    <table>
+      <tr><th>Detox</th><th>Appium</th></tr>
+      <tr><td>Optimizado para RN</td><td>Multi-plataforma/multi-framework</td></tr>
+      <tr><td>Sync automático con RN bridge</td><td>Esperas manuales frecuentes</td></tr>
+      <tr><td>JS/TS tests</td><td>Multi-lenguaje (Python, Java...)</td></tr>
+      <tr><td>Menos flexible fuera RN</td><td>WebView, native puro, cross-app</td></tr>
+    </table>
+    <p>Appium si necesitás testing cross-stack o devices cloud heterogéneos; Detox si el stack es RN y querés sync confiable.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Qué problemas comunes tiene Detox?</h2>
+  <div class="answer">
+    <ul>
+      <li>Setup frágil con versiones RN/Xcode/Gradle.</li>
+      <li>Flaky en CI si emulador lento o sin recursos.</li>
+      <li><code>testID</code> faltantes — tests acoplados a text que cambia con i18n.</li>
+      <li>Animations/gestures complejos difíciles de automatizar.</li>
+      <li>Debug builds más lentos; release builds para CI más estables pero menos debuggable.</li>
+      <li>Expo requiere dev client — no funciona en Expo Go puro.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Cómo evitar flaky tests?</h2>
+  <div class="answer">
+    <ul>
+      <li><code>testID</code> estables, no depender de copy traducido.</li>
+      <li>Mock backend en E2E (staging dedicado, MSW server, fixtures).</li>
+      <li>Reset app state entre tests (<code>device.launchApp({ delete: true })</code>).</li>
+      <li>Evitar dependencia de timing — usar waitFor de Detox.</li>
+      <li>Desactivar animaciones en test builds si causan race.</li>
+      <li>Retry solo en CI infra issues, no en tests mal escritos.</li>
+      <li>Quarantine flaky tests — fix or delete, nunca ignorar silenciosamente.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Qué flows automatizarías sí o sí?</h2>
+  <div class="answer">
+    <ul>
+      <li>Login / logout / session restore.</li>
+      <li>Registro o onboarding crítico.</li>
+      <li>Flujo de pago o acción de revenue.</li>
+      <li>Deep link → screen destino correcta.</li>
+      <li>Permisos críticos (camera, location) — al menos smoke.</li>
+      <li>Push notification tap → navegación.</li>
+    </ul>
+    <p>Priorizar por impacto de negocio × frecuencia de cambio × costo de bug en prod.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Cómo integrar Detox en CI?</h2>
+  <div class="answer">
+    <ol>
+      <li>Build test binary (Detox config <code>ios.sim.debug</code> / android).</li>
+      <li>Boot emulator/simulator en CI (macOS runner para iOS).</li>
+      <li><code>detox test</code> con headless flags.</li>
+      <li>Artifacts: screenshots on failure, logs, videos.</li>
+      <li>Parallel shards si suite grande.</li>
+      <li>EAS Workflows o dedicated device farm (BrowserStack) para escala.</li>
+    </ol>
+    <p>Cache pods/gradle; prebuilt binaries para acelerar.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Cómo debuggear tests inestables?</h2>
+  <div class="answer">
+    <ul>
+      <li>Correr test aislado 10-20 veces (<code>--repeat</code>).</li>
+      <li><code>device.takeScreenshot</code> en cada step sospechoso.</li>
+      <li>Logs de app + Detox trace.</li>
+      <li>Verificar si falla solo en CI → recursos, race, network.</li>
+      <li>Revisar si otro test deja state sucio.</li>
+      <li>Grabar video del emulator en CI failure.</li>
+    </ul>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

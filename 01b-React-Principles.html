@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React — Principles</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">01b · React</span>
+  <h1>React Principles</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Qué es el Virtual DOM?</h2>
+  <div class="answer">
+    <p>El Virtual DOM es una representación en memoria del UI como un árbol de objetos JavaScript (React elements). React no manipula el DOM nativo directamente en cada cambio de state — primero construye/actualiza el VDOM, lo compara con la versión anterior y aplica solo el diff mínimo al DOM real.</p>
+    <p>Beneficios: abstracción declarativa, batching de updates, y un punto central para optimizaciones (reconciliation, Concurrent features). No es “más rápido que el DOM siempre” — en updates simples el overhead puede existir; gana en apps complejas con muchos updates parciales.</p>
+    <p>En React Native el concepto es análogo: hay un árbol de shadow nodes que se sincroniza con vistas nativas (UIKit/Android Views), no con DOM HTML.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Qué hace el reconciliation algorithm?</h2>
+  <div class="answer">
+    <p>Reconciliation es el proceso de comparar el árbol React nuevo con el anterior para decidir qué reutilizar, actualizar o destruir.</p>
+    <p>Reglas clave:</p>
+    <ul>
+      <li>Elementos de <strong>distinto type</strong> → desmonta el subtree completo y monta uno nuevo.</li>
+      <li>Mismo type → actualiza props in-place, recursivamente en hijos.</li>
+      <li>Listas → usa <code>key</code> para identificar items estables entre reorders/inserts/deletes.</li>
+    </ul>
+    <p>Complejidad O(n) heurística (no diff óptimo de edición de árbol). React 18+ puede interrumpir reconciliation en modo concurrente para priorizar input del usuario.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Qué son las keys y por qué importan?</h2>
+  <div class="answer">
+    <p><code>key</code> es un identificador estable que React usa para mapear items entre renders en listas. Debe ser único entre hermanos y consistente mientras el item representa la misma entidad.</p>
+    <p>Sin keys correctas: al reordenar o filtrar, React puede reutilizar el componente equivocado → state incorrecto en inputs, animaciones rotas, bugs sutiles.</p>
+    <p>Usá IDs de dominio (<code>user.id</code>), no índices del array si la lista muta (insert/delete/reorder). El índice solo es aceptable en listas estáticas que nunca reordenan.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Qué significa que React sea declarativo?</h2>
+  <div class="answer">
+    <p>Declarativo = describís <em>qué</em> debe verse dado un state, no <em>cómo</em> mutar el DOM paso a paso.</p>
+    <p>Comparación: jQuery imperativo (<code>$('#btn').hide(); $('#msg').text('...')</code>) vs React (<code>{isLoading ? &lt;Spinner/&gt; : &lt;Content data={data}/&gt;}</code>).</p>
+    <p>React se encarga de sincronizar la vista con el state. Vos modelás el UI como función del state. Esto reduce bugs de inconsistencia UI/state y facilita razonar sobre flujos.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Qué diferencia hay entre controlled y uncontrolled components?</h2>
+  <div class="answer">
+    <p><strong>Controlled:</strong> React es la fuente de verdad del valor. <code>value={state}</code> + <code>onChange</code> que actualiza state. Cada keystroke pasa por React.</p>
+    <p><strong>Uncontrolled:</strong> el DOM mantiene el valor. Accedés con <code>ref</code> (<code>ref.current.value</code>). React no controla cada cambio.</p>
+    <p>Controlled es el default recomendado: validación en tiempo real, values derivados, reset programático. Uncontrolled tiene sentido en forms simples, integraciones con libs no-React, o file inputs.</p>
+    <p>En RN: <code>TextInput</code> controlled con <code>value</code>+<code>onChangeText</code>; cuidado con performance en inputs muy frecuentes (considerar debounce o uncontrolled para casos extremos).</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Qué es lifting state up?</h2>
+  <div class="answer">
+    <p>Patrón donde movés state compartido al ancestro común más cercano de los componentes que lo necesitan, y se lo pasás como props hacia abajo.</p>
+    <p>Evita duplicar state sincronizado entre hermanos (ej: temperatura en Celsius y Fahrenheit). Un solo state “source” y derivaciones/callbacks hacia los hijos.</p>
+    <p>Relacionado con “single source of truth” — no copies state entre componentes si podés elevarlo.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Qué significa “single source of truth”?</h2>
+  <div class="answer">
+    <p>Cada pieza de state debe vivir en un solo lugar del árbol (o store). Otros componentes la leen o derivan, pero no mantienen copias que puedan desincronizarse.</p>
+    <p>En apps grandes esto escala a: state local (UI efímera), state de servidor (React Query cache), state global (Redux/Zustand) — cada dominio con su fuente única.</p>
+    <p>Anti-pattern: mismo dato en Redux + Context + state local del componente sin pipeline claro de quién es owner.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Qué es composition vs inheritance en React?</h2>
+  <div class="answer">
+    <p>React favorece <strong>composición</strong> sobre herencia de clases.</p>
+    <p>En lugar de extender <code>BaseModal extends React.Component</code>, componés: <code>&lt;Modal&gt;&lt;Modal.Header/&gt;&lt;Modal.Body&gt;{children}&lt;/Modal.Body&gt;&lt;/Modal&gt;</code>.</p>
+    <p>Mecanismos: <code>children</code>, render props, slots nombrados, compound components, HOCs (menos idiomático hoy), custom hooks (preferido para lógica compartida).</p>
+    <p>Herencia de clases para UI era frágil — composición es más flexible y explícita sobre qué se comparte.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>9. ¿Qué son render props?</h2>
+  <div class="answer">
+    <p>Patrón donde un componente recibe una función como prop (o como <code>children</code>) que recibe datos/comportamiento y devuelve React elements.</p>
+    <p>Ejemplo: <code>&lt;Mouse render={({x,y}) =&gt; &lt;Cursor x={x} y={y}/&gt;}/&gt;</code></p>
+    <p>Comparte lógica sin acoplar UI. Hoy en día muchas veces se reemplaza por custom hooks (<code>const {x,y} = useMouse()</code>) que son más ergonómicos y componibles. Render props siguen útiles cuando querés encapsular lógica <em>y</em> controlar el render desde el padre inline.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>10. ¿Qué son Higher Order Components?</h2>
+  <div class="answer">
+    <p>Un HOC es una función que recibe un componente y devuelve uno nuevo con props adicionales o comportamiento envuelto: <code>withAuth(WrappedComponent)</code>.</p>
+    <p>Casos históricos: auth guards, inject de Redux (<code>connect</code>), theming. Problemas: wrapper hell en DevTools, refs indirectas, props naming collisions, difícil tipar en TS.</p>
+    <p>En código moderno: custom hooks + composición reemplazan la mayoría de HOCs. Saber explicarlos importa por legacy codebases y entrevistas.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>11. ¿Qué ventajas tiene functional programming en React?</h2>
+  <div class="answer">
+    <ul>
+      <li>Componentes como funciones puras del state/props → predecibles, fáciles de testear.</li>
+      <li>Inmutabilidad en updates de state → reconciliation eficiente, time-travel debugging en Redux.</li>
+      <li>Composición de funciones (hooks) vs jerarquías de herencia.</li>
+      <li>Funciones de orden superior (HOCs, custom hooks).</li>
+      <li>Evitar efectos secundarios en render — side effects aislados en effects/event handlers.</li>
+    </ul>
+    <p>React no es FP puro (tiene state mutable interno, effects), pero el modelo mental funcional reduce bugs en UI compleja.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

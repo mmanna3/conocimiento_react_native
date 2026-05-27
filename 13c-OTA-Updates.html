@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTA Updates</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">13c · Específicos</span>
+  <h1>OTA Updates</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Qué experiencia tenés con CodePush/EAS Updates?</h2>
+  <div class="answer">
+    <p><strong>Microsoft CodePush</strong> (App Center): OTA de JS bundle para RN bare. Check update on launch, download en background, apply on restart o immediate.</p>
+    <p><strong>EAS Update</strong> (Expo): canal-based (production, staging), integrado con EAS Build runtime versioning, rollback desde dashboard.</p>
+    <p>Experiencia típica a describir:</p>
+    <ul>
+      <li>Configurar runtime version policy (appVersion vs fingerprint).</li>
+      <li>Canales por ambiente; staged rollouts.</li>
+      <li>CI publica update en merge a release branch.</li>
+      <li>Monitoring post-deploy; rollback cuando error rate sube.</li>
+    </ul>
+    <p>Limitación común: no puede cambiar código nativo — solo JS/assets compatible con binary existente.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Qué riesgos tienen los OTA updates?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Breaking native mismatch</strong> — update JS incompatible con binary → crash on launch. Mitigar: runtime versioning estricto.</li>
+      <li><strong>Store policy</strong> — Apple restringe OTA que cambie “purpose” de app; bugfix JS generalmente OK, feature major discutible.</li>
+      <li><strong>Sin review de Apple/Google</strong> — bug en OTA llega instantáneo a todos → necesitás rollback rápido y staged rollout.</li>
+      <li><strong>State/schema migrations</strong> — persist incompatible post-update.</li>
+      <li><strong>Security</strong> — canal de update comprometido = supply chain risk — firmar updates, HTTPS, auth.</li>
+      <li><strong>Testing gap</strong> — OTA no pasó store QA — requiir mismo CI gates que release.</li>
+    </ul>
+    <p>Best practices: canary cohorts, automatic rollback on crash spike, never OTA native dep changes, feature flags dentro del bundle OTA.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

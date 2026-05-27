@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Native — General</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">02a · React Native</span>
+  <h1>React Native — General</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Cómo funciona React Native internamente?</h2>
+  <div class="answer">
+    <p>RN ejecuta tu código JavaScript (Hermes o JSC) en un runtime JS. React renderiza componentes a un árbol de shadow nodes (Virtual DOM adaptado). Ese árbol se traduce a vistas nativas reales: <code>UIView</code> en iOS, <code>android.view.View</code> en Android.</p>
+    <p>La comunicación JS ↔ nativo históricamente pasaba por el <strong>Bridge</strong> (serialización JSON asíncrona). Con la <strong>New Architecture</strong>, JSI permite llamadas directas C++ entre JS y módulos nativos sin serializar cada mensaje.</p>
+    <p>El UI thread nativo maneja layout y pintura; el JS thread ejecuta lógica de negocio y el render de React. Si JS está bloqueado, la UI puede seguir animando (con Reanimated en UI thread) pero interacciones que dependen de JS se sienten lentas.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Qué corre en JS thread y qué corre nativamente?</h2>
+  <div class="answer">
+    <p><strong>JS thread:</strong> React render, lógica de negocio, fetch, state management, la mayoría de handlers de eventos (onPress → JS → vuelve a nativo).</p>
+    <p><strong>Native/UI thread:</strong> Layout (Yoga), composición de vistas, gestos de bajo nivel, animaciones nativas/Reanimated worklets en UI thread, rendering a pantalla.</p>
+    <p><strong>Shadow thread</strong> (legacy architecture): cálculo de layout en thread separado.</p>
+    <p>Regla: operaciones pesadas en JS bloquean respuesta a taps y navegación. Mové trabajo pesado a nativo, workers, o chunk con <code>InteractionManager</code>.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Qué es el bridge?</h2>
+  <div class="answer">
+    <p>El bridge es la capa de comunicación asíncrona entre JS y código nativo en la arquitectura clásica de RN. Los módulos nativos y el UI manager envían mensajes serializados (JSON) en batches a través de una cola.</p>
+    <p>Limitaciones: overhead de serialización, asincronía (difícil llamadas síncronas), no compartir memoria, cuellos de botella con muchos eventos (scroll, animations driven by JS).</p>
+    <p>La New Architecture lo reemplaza con JSI + Fabric + TurboModules para invocaciones directas y lazy loading de módulos nativos.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Qué cambió con la New Architecture?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>JSI (JavaScript Interface)</strong> — JS puede invocar objetos C++ nativos directamente, sin bridge JSON.</li>
+      <li><strong>Fabric</strong> — nuevo renderer: shadow tree en C++, layout más predecible, soporte Concurrent React, synchronous updates donde aplica.</li>
+      <li><strong>TurboModules</strong> — módulos nativos cargados lazy, tipados con Codegen.</li>
+      <li><strong>Codegen</strong> — genera bindings type-safe entre JS y nativo desde specs TypeScript/Flow.</li>
+    </ul>
+    <p>Beneficios: menor latencia JS↔native, mejor performance en startup y listas, camino hacia shared memory y APIs más ricas. Migración gradual con compat layer; librerías third-party deben actualizarse.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Qué son Fabric y TurboModules?</h2>
+  <div class="answer">
+    <p><strong>Fabric</strong> es el renderer de la New Architecture. Reemplaza al UIManager legacy. Maneja creación/actualización de shadow nodes en C++, integración con Yoga layout, y commit de mutaciones al host view de forma más eficiente. Habilita features de React 18 (Suspense, Concurrent rendering) en RN.</p>
+    <p><strong>TurboModules</strong> reemplazan NativeModules clásicos. Se cargan bajo demanda (no todos al startup), usan JSI para invocación directa, y se generan con Codegen desde una spec (<code>NativeModuleSpec</code>).</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Qué problemas reales de performance encontraste?</h2>
+  <div class="answer">
+    <p>Ejemplos típicos (personalizá con tu experiencia):</p>
+    <ul>
+      <li>Scroll janky por re-renders en cada item de FlatList.</li>
+      <li>Animaciones en JS thread compitiendo con gesture handlers.</li>
+      <li>Imágenes full-resolution sin resize → memory pressure en Android.</li>
+      <li>Hydration de state pesado al montar screens en el stack de navegación.</li>
+      <li>Bridge saturado por analytics/logging excesivo en scroll events.</li>
+    </ul>
+    <p>Framework STAR: Síntoma → Trace (Flipper/Systrace) → Acción → Resultado medible.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Cómo optimizás una app RN?</h2>
+  <div class="answer">
+    <ul>
+      <li>FlatList/FlashList bien configuradas; evitar ScrollView con miles de items.</li>
+      <li>Reanimated 2+ para animaciones en UI thread.</li>
+      <li>Memoización estratégica; state local; evitar contextos globales calientes.</li>
+      <li>Hermes habilitado; ProGuard/R8 en Android; strip dead code.</li>
+      <li>Imágenes: tamaño correcto, cache (FastImage, expo-image), WebP donde aplique.</li>
+      <li>Defer work con <code>InteractionManager.runAfterInteractions</code>.</li>
+      <li>Reducir work en mount de screens (lazy tabs, skeleton first).</li>
+      <li>Monitorear JS thread FPS y native memory en CI/device farm.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Qué diferencia hay entre Expo y bare React Native?</h2>
+  <div class="answer">
+    <p><strong>Expo</strong> — toolchain integrado: SDK con módulos preconfigurados, EAS Build/Submit/Updates, config plugins, managed workflow o dev client. Menos fricción inicial, OTA updates, builds en cloud.</p>
+    <p><strong>Bare RN</strong> — control total de <code>ios/</code> y <code>android/</code>, cualquier módulo nativo sin esperar soporte Expo, más setup manual (Xcode, Gradle, signing).</p>
+    <p>Hoy la línea se difuminó: Expo con dev client + config plugins permite casi cualquier módulo nativo. Muchos proyectos enterprise usan “Expo bare” o prebuild.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>9. ¿Cuándo elegirías Expo?</h2>
+  <div class="answer">
+    <ul>
+      <li>Equipos que quieren ship rápido sin especialista nativo dedicado.</li>
+      <li>OTA updates, EAS Build, CI simplificado.</li>
+      <li>App que encaja en el SDK de Expo (cámara, location, notifications, etc.).</li>
+      <li>Prototipos, MVPs, apps de contenido/negocio estándar.</li>
+    </ul>
+    <p>Elegiría bare cuando: módulos nativos muy custom, requisitos de binary size extremos, integraciones legacy específicas, o políticas de build 100% on-premise sin EAS.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>10. ¿Cómo manejás deep linking?</h2>
+  <div class="answer">
+    <p>Configuración en tres capas:</p>
+    <ol>
+      <li><strong>Nativo</strong> — URL schemes, Universal Links (iOS), App Links (Android) en Info.plist / AndroidManifest.</li>
+      <li><strong>React Navigation</strong> — <code>linking</code> config mapeando paths a screens y params.</li>
+      <li><strong>Runtime</strong> — escuchar URL inicial (<code>Linking.getInitialURL</code>) y eventos (<code>Linking.addEventListener</code>).</li>
+    </ol>
+    <p>Consideraciones: auth gates (redirect a login si no hay sesión), deferred deep links, state restoration, testing en cold/warm start. Expo Router simplifica file-based routing + linking.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>11. ¿Cómo manejás navegación?</h2>
+  <div class="answer">
+    <p><strong>React Navigation</strong> es el estándar de facto: stack, tab, drawer navigators. Alternativas: Expo Router (file-based sobre React Navigation), React Native Navigation (Wix, nativo).</p>
+    <p>Patrones enterprise:</p>
+    <ul>
+      <li>Typed navigation con TypeScript (<code>RootStackParamList</code>).</li>
+      <li>Separar auth flow vs app flow (root navigator condicional).</li>
+      <li>Deep linking unificado.</li>
+      <li>Lazy loading de stacks por feature.</li>
+      <li>Evitar pasar objetos grandes en params — pasar IDs y fetch en destino.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>12. ¿Cómo manejás estados globales?</h2>
+  <div class="answer">
+    <p>Separar por tipo:</p>
+    <ul>
+      <li><strong>Server state</strong> — TanStack Query / RTK Query (cache, stale, refetch).</li>
+      <li><strong>Client global</strong> — Zustand o Redux Toolkit según complejidad y equipo.</li>
+      <li><strong>UI efímera</strong> — state local o context acotado (modal open, form draft).</li>
+      <li><strong>Auth/session</strong> — context + secure storage; tokens fuera de Redux si no hace falta.</li>
+    </ul>
+    <p>Evitar un store monolítico. Feature slices con selectors memoizados. Persistir solo lo necesario (redux-persist, MMKV).</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>13. ¿Cómo estructurás un proyecto RN grande?</h2>
+  <div class="answer">
+    <p>Feature-based con shared layer:</p>
+    <pre><code>src/
+  features/        # auth, home, payments — screens, hooks, components locales
+  shared/          # ui kit, utils, api client, types
+  navigation/
+  store/           # si Redux global
+  app/             # providers, entry</code></pre>
+    <p>Monorepo (Nx/Turborepo) si hay múltiples apps o packages compartidos. Barrel exports con cuidado (tree-shaking). Absolute imports con path aliases. Documentar ADRs para decisiones arquitectónicas.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>14. ¿Cómo manejás configuración por ambientes?</h2>
+  <div class="answer">
+    <ul>
+      <li><code>.env</code> + <code>react-native-config</code> o Expo <code>app.config.js</code> con <code>extra</code>.</li>
+      <li>Schemes/flavors: dev, staging, prod con bundle IDs distintos (instalación side-by-side).</li>
+      <li>Build-time injection via CI (EAS env secrets, GitHub Actions).</li>
+      <li>Nunca commitear secrets — solo URLs públicas y feature flags no sensibles.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>15. ¿Cómo manejás secrets?</h2>
+  <div class="answer">
+    <p><strong>Regla de oro:</strong> nada verdaderamente secreto en el bundle JS — es reverse-engineerable.</p>
+    <ul>
+      <li>API keys de cliente: restricción por bundle ID / certificate pinning / proxy backend.</li>
+      <li>Tokens de usuario: Keychain (iOS) / EncryptedSharedPreferences o Keystore (Android) via <code>react-native-keychain</code> o Expo SecureStore.</li>
+      <li>Secrets de build: EAS Secrets, GitHub encrypted secrets, Vault.</li>
+      <li>OAuth: PKCE, refresh token rotation, backend como BFF.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>16. ¿Cómo debuggeás crashes nativos?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Symbolicated stack traces</strong> — dSYM (iOS), mapping/proguard (Android).</li>
+      <li>Reproducir en debug con Xcode/Android Studio attached.</li>
+      <li>Flipper crash reporter, logcat, Xcode Organizer crashes.</li>
+      <li>Bisect: ¿crash en release only? → optimizaciones ProGuard, Hermes, diferencias de config.</li>
+      <li>Sentry/Firebase Crashlytics con breadcrumbs y contexto de navegación.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>17. ¿Cómo manejás memory leaks?</h2>
+  <div class="answer">
+    <ul>
+      <li>Cleanup en <code>useEffect</code> return: listeners, subscriptions, timers.</li>
+      <li>Cancelar fetch/axios con AbortController al unmount.</li>
+      <li>Evitar referencias globales a screens desmontados.</li>
+      <li>Navigation: <code>unmountOnBlur</code> donde aplique; no acumular listeners en focus sin blur cleanup.</li>
+      <li>Imágenes: liberar cache cuando crece (expo-image tiene políticas).</li>
+      <li>Profiling periódico con Instruments / Android Profiler en flows críticos.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>18. ¿Cómo manejás permisos?</h2>
+  <div class="answer">
+    <p>Usar librerías unificadas: <code>react-native-permissions</code> o APIs de Expo (<code>expo-camera</code>, <code>expo-location</code>).</p>
+    <p>Patrón UX:</p>
+    <ol>
+      <li>Explicar <em>por qué</em> antes del diálogo del sistema (pre-prompt screen).</li>
+      <li>Pedir permiso en contexto (al tap “Escanear QR”, no al abrir app).</li>
+      <li>Manejar <code>denied</code>, <code>blocked</code> → deep link a Settings.</li>
+      <li>iOS Info.plist usage descriptions obligatorios; Android 13+ notification permission runtime.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="question">
+  <h2>19. ¿Cómo manejás lifecycle/backgrounding?</h2>
+  <div class="answer">
+    <p><code>AppState</code> de React Native: <code>active</code>, <code>background</code>, <code>inactive</code>.</p>
+    <ul>
+      <li>Pausar polling/video en background.</li>
+      <li>Flush analytics queue antes de background.</li>
+      <li>Refresh token / sync al volver a <code>active</code>.</li>
+      <li>iOS: background modes limitados (audio, location, fetch); Android: WorkManager para tareas diferidas.</li>
+      <li>Guardar draft de forms en background si el OS puede matar el proceso.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>20. ¿Cómo manejás reconnect/offline?</h2>
+  <div class="answer">
+    <ul>
+      <li><code>@react-native-community/netinfo</code> para detectar conectividad.</li>
+      <li>TanStack Query: <code>onlineManager</code>, retry, refetch on reconnect.</li>
+      <li>Cola de mutaciones offline (optimistic updates + persist + replay).</li>
+      <li>UI clara: banner offline, estados degradados, cache stale con timestamp.</li>
+      <li>Conflict resolution strategy documentada (ver offline storage).</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>21. ¿Cómo hacés release management?</h2>
+  <div class="answer">
+    <ul>
+      <li>Versionado semántico + build number auto-incrementado en CI.</li>
+      <li>Branches: trunk-based o gitflow lite; release branches para hotfixes.</li>
+      <li>TestFlight / Internal Testing → staged rollout (10% → 50% → 100%).</li>
+      <li>Changelog automatizado (conventional commits).</li>
+      <li>Feature flags para activar post-release.</li>
+      <li>EAS Submit / Fastlane para stores; checklist pre-release (QA sign-off, crash-free rate baseline).</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>22. ¿Cómo investigás un crash en producción?</h2>
+  <div class="answer">
+    <ol>
+      <li>Crashlytics/Sentry → stack trace symbolicado, versión, device, OS.</li>
+      <li>Filtrar por release, % usuarios afectados, si es nuevo o regresión.</li>
+      <li>Breadcrumbs: última screen, acciones, API calls.</li>
+      <li>Reproducir con mismos params/device; si no, binary search en commits.</li>
+      <li>Hotfix branch si es crítico; staged rollout del fix.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="question">
+  <h2>23. ¿Cómo monitoreás apps mobile?</h2>
+  <div class="answer">
+    <p>Capas:</p>
+    <ul>
+      <li><strong>Crashes</strong> — Sentry, Firebase Crashlytics, Bugsnag.</li>
+      <li><strong>Performance</strong> — Firebase Performance, Datadog RUM, custom traces.</li>
+      <li><strong>Analytics</strong> — Amplitude, Mixpanel, Firebase Analytics.</li>
+      <li><strong>Logs</strong> — structured logging en dev; en prod solo eventos clave (no PII).</li>
+      <li><strong>Health KPIs</strong> — crash-free sessions, ANR rate (Android), app start time, API error rates.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>24. ¿Qué herramientas usaste para analytics/crash reporting?</h2>
+  <div class="answer">
+    <p>Mencioná las que hayas usado con profundidad. Combo típico enterprise:</p>
+    <ul>
+      <li><strong>Sentry</strong> — errors JS y nativos, releases, performance.</li>
+      <li><strong>Firebase Crashlytics</strong> — crashes nativos, gratuito, integración Google.</li>
+      <li><strong>Amplitude/Mixpanel</strong> — product analytics, funnels.</li>
+      <li><strong>Datadog</strong> — si ya está en el stack backend.</li>
+    </ul>
+    <p>Importante: sampling, GDPR/consent, no loguear PII, correlacionar con release version y feature flags.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>25. ¿Cómo reducirías el tamaño de una app?</h2>
+  <div class="answer">
+    <ul>
+      <li>Hermes; enable ProGuard/R8; shrink resources (Android).</li>
+      <li>App Bundles (AAB) con splits por ABI/density.</li>
+      <li>Auditar dependencias (bundle analyzer, <code>npx depcheck</code>).</li>
+      <li>Imágenes vectoriales (SVG) o WebP; eliminar assets no usados.</li>
+      <li>Lazy require de features pesadas; evitar importar lodash entero.</li>
+      <li>iOS: bitcode off (deprecated), strip symbols en release, On Demand Resources si aplica.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>26. ¿Cómo manejás feature flags?</h2>
+  <div class="answer">
+    <ul>
+      <li>Servicios: LaunchDarkly, Firebase Remote Config, Unleash, flagsmith.</li>
+      <li>Fetch al startup + cache local; refresh periódico o on foreground.</li>
+      <li>Defaults seguros si el fetch falla (fail closed o open según riesgo).</li>
+      <li>Tipado de flags; eliminar flags muertos (deuda de flags).</li>
+      <li>Combinar con staged rollout en stores para riesgo dual.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>27. ¿Cómo hacés code splitting/lazy loading?</h2>
+  <div class="answer">
+    <p>En RN no hay dynamic import nativo como web webpack chunks, pero podés:</p>
+    <ul>
+      <li>Lazy screens con React Navigation (<code>React.lazy</code> + Suspense limitado en RN).</li>
+      <li>Requerir módulos pesados solo cuando se necesitan (<code>require()</code> dentro de handler).</li>
+      <li>Separar bundles OTA (Expo Updates con assets).</li>
+      <li>Monorepo: packages por feature importados solo donde se usan.</li>
+    </ul>
+    <p>El bundle principal sigue siendo un JS bundle — el win es startup time y memory, no descarga on-demand como web.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>28. ¿Qué diferencias importantes hay entre iOS y Android?</h2>
+  <div class="answer">
+    <table>
+      <tr><th>Aspecto</th><th>iOS</th><th>Android</th></tr>
+      <tr><td>Back gesture</td><td>Swipe from edge ( obligatorio considerar )</td><td>Hardware/gesture back — manejar con React Navigation</td></tr>
+      <tr><td>Fonts</td><td>San Francisco system</td><td>Roboto; más fragmentación de OEM</td></tr>
+      <tr><td>Permissions</td><td>Info.plist strings; más restrictivo background</td><td>Runtime permissions; más variantes de OS</td></tr>
+      <tr><td>Push</td><td>APNs</td><td>FCM</td></tr>
+      <tr><td>Store review</td><td>Más estricto, human review</td><td>Google Play más automatizado</td></tr>
+      <tr><td>Layout</td><td>Safe areas, notch/Dynamic Island</td><td>Status bar, navigation bar, edge-to-edge</td></tr>
+      <tr><td>Performance testing</td><td>Menos fragmentación de devices</td><td>Probar gama baja (API 26-28)</td></tr>
+    </table>
+    <p>Platform-specific code: <code>Platform.OS</code>, <code>.ios.tsx</code> / <code>.android.tsx</code>, StyleSheet con Platform.select.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

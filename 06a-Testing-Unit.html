@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testing — Unit</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">06a · Testing</span>
+  <h1>Unit Testing</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Qué testearías y qué no?</h2>
+  <div class="answer">
+    <p><strong>Testear:</strong></p>
+    <ul>
+      <li>Lógica de negocio pura (validators, formatters, pricing rules).</li>
+      <li>Custom hooks con lógica no trivial.</li>
+      <li>Componentes con comportamiento crítico (form submit, error states).</li>
+      <li>Reducers, selectors, utils.</li>
+    </ul>
+    <p><strong>No testear (o baja prioridad):</strong></p>
+    <ul>
+      <li>Implementación interna (state variable names, order of hooks).</li>
+      <li>Estilos pixel-perfect.</li>
+      <li>Librerías third-party (confiar en sus tests).</li>
+      <li>Wrappers triviales sin lógica.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Qué diferencia hay entre unit/integration/e2e?</h2>
+  <div class="answer">
+    <table>
+      <tr><th>Tipo</th><th>Alcance</th><th>Velocidad</th><th>Confianza</th></tr>
+      <tr><td>Unit</td><td>Función/componente aislado, mocks</td><td>Muy rápido</td><td>Baja-media</td></tr>
+      <tr><td>Integration</td><td>Múltiples módulos reales (hook + API mock)</td><td>Medio</td><td>Media-alta</td></tr>
+      <tr><td>E2E</td><td>App completa, device/simulator</td><td>Lento</td><td>Alta</td></tr>
+    </table>
+    <p>Pirámide: muchos unit, menos integration, pocos E2E en critical paths (login, checkout, payment).</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Qué hace react-testing-library?</h2>
+  <div class="answer">
+    <p>RTL renderiza componentes en un DOM/jsdom (o RN Testing Library en entorno de test RN) y provee queries orientadas al usuario: <code>getByRole</code>, <code>getByText</code>, <code>getByLabelText</code>.</p>
+    <p>Filosofía: testear como el usuario interactúa — no detalles de implementación. Dispara eventos (<code>fireEvent</code>, <code>userEvent</code>) y assertea outcomes visibles.</p>
+    <p>En RN: <code>@testing-library/react-native</code> con matchers de Jest Native (<code>toBeVisible</code>, etc.).</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Por qué evitar testear implementación?</h2>
+  <div class="answer">
+    <p>Tests de implementación acoplados a internals (nombre de state, cantidad de hooks, clases CSS) se rompen en refactors que no cambian comportamiento — falsos negativos, mantenimiento caro.</p>
+    <p>Testear comportamiento observable: “al tap Submit con email inválido, muestra error” vs “state.errors.email tiene length 1”.</p>
+    <p>Excepción: unit tests de funciones puras donde la implementación ES el contrato.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Qué hace act()?</h2>
+  <div class="answer">
+    <p><code>act()</code> envuelve updates que causan re-renders y effects para asegurar que React procese todos los updates antes de assertions.</p>
+    <p>Sin <code>act</code>: warnings “An update was not wrapped in act(...)” y assertions flaky (estado intermedio).</p>
+    <p>RTL y <code>renderHook</code> envuelven en act automáticamente en muchos casos. Manual en async: <code>await act(async () =&gt; { ... })</code>.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Cómo mockear APIs?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>MSW (Mock Service Worker)</strong> — intercepta a nivel network, mismo código de API client.</li>
+      <li><strong>jest.mock</strong> del módulo api — rápido pero acoplado.</li>
+      <li><strong>React Query</strong> — <code>QueryClient</code> con <code>defaultOptions</code> retry false; prefetch data en test.</li>
+      <li>Fixtures JSON reutilizables; factories (faker) para variaciones.</li>
+    </ul>
+    <p>Preferir MSW para integration tests — testea el wiring real del client.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Cómo mockear navigation?</h2>
+  <div class="answer">
+    <pre><code>const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () =&gt; ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () =&gt; ({ navigate: mockNavigate }),
+}));</code></pre>
+    <p>O wrap en <code>NavigationContainer</code> con test navigator. Assertear <code>mockNavigate('Screen', { id: 1 })</code> después de interacción.</p>
+    <p>Para Expo Router: mock del router module. Mantener mocks en setup file compartido.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Cómo testear hooks?</h2>
+  <div class="answer">
+    <p><code>renderHook</code> de <code>@testing-library/react-native</code>:</p>
+    <pre><code>const { result } = renderHook(() =&gt; useCounter());
+act(() =&gt; result.current.increment());
+expect(result.current.count).toBe(1);</code></pre>
+    <p>Para hooks con context: wrapper con providers. Para async: <code>waitFor</code>. Extraer lógica pura del hook cuando sea testeable sin React.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>9. ¿Cómo testear async flows?</h2>
+  <div class="answer">
+    <ul>
+      <li><code>waitFor</code> / <code>findBy*</code> queries (esperan aparición).</li>
+      <li><code>waitForElementToBeRemoved</code> para loaders.</li>
+      <li>Fake timers (<code>jest.useFakeTimers</code>) para debounce.</li>
+      <li>MSW con delay simulado.</li>
+      <li>Evitar <code>setTimeout</code> arbitrarios — usar APIs async de RTL.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>10. ¿Qué métricas de testing te importan?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Critical path coverage</strong> — login, payments, core flows cubiertos.</li>
+      <li><strong>Flaky rate</strong> — % tests inestables en CI (objetivo ~0).</li>
+      <li><strong>CI duration</strong> — feedback loop &lt; 10-15 min ideal.</li>
+      <li><strong>Defect escape rate</strong> — bugs en prod en áreas sin tests.</li>
+      <li><strong>Mutation testing</strong> (opcional avanzado) — calidad de assertions.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>11. ¿Qué opinás de coverage?</h2>
+  <div class="answer">
+    <p>Coverage es métrica de vanidad si no medís calidad de tests. 80% coverage con tests triviales no protege nada.</p>
+    <p>Útil como floor (ej: no mergear si coverage baja) y para detectar código nunca ejecutado. No perseguir 100% — costo/beneficio decae.</p>
+    <p>Mejor: coverage en domain logic + E2E en happy paths + manual exploratory para UX.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

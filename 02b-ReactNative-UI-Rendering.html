@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Native — UI / Rendering</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">02b · React Native</span>
+  <h1>UI / Rendering</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Qué componentes de RN generan problemas de performance?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>ScrollView</strong> con muchos hijos — renderiza todo upfront.</li>
+      <li><strong>FlatList mal configurada</strong> — sin memo en rows, keys malas, nested lists.</li>
+      <li><strong>Animated (legacy)</strong> driven by JS en scroll/gestures.</li>
+      <li><strong>Image</strong> sin dimensiones o resolución excesiva.</li>
+      <li><strong>TextInput</strong> controlled con re-render de padre grande en cada keystroke.</li>
+      <li><strong>MapView, WebView, Video</strong> — views nativas pesadas; múltiples instancias.</li>
+      <li><strong>Shadows en Android</strong> — elevation costosa en listas.</li>
+      <li><strong>BlurView, gradients complejos</strong> — overdraw.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Cuándo usar FlatList vs ScrollView?</h2>
+  <div class="answer">
+    <p><strong>ScrollView:</strong> pocos hijos de altura acotada (formularios cortos, contenido estático). Renderiza todos los children de una vez — simple pero no escala.</p>
+    <p><strong>FlatList:</strong> listas dinámicas o largas. Virtualiza: solo monta items visibles + buffer. Obligatorio para feeds, chats, catálogos.</p>
+    <p><strong>FlashList (Shopify):</strong> alternativa más performante cuando FlatList no alcanza — recycling agresivo, mejor FPS en listas complejas.</p>
+    <p>Regla: si podés scrollear más de ~20-30 items repetitivos → FlatList/FlashList.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Qué optimizaciones tiene FlatList?</h2>
+  <div class="answer">
+    <ul>
+      <li><code>keyExtractor</code> con IDs estables.</li>
+      <li><code>getItemLayout</code> — salta medición si altura fija.</li>
+      <li><code>initialNumToRender</code>, <code>maxToRenderPerBatch</code>, <code>windowSize</code> — tunear memoria vs blank areas.</li>
+      <li><code>removeClippedSubviews</code> (Android especialmente).</li>
+      <li><code>memo</code> en item component; evitar inline renderItem closures (extraer componente).</li>
+      <li><code>extraData</code> solo cuando el item no cambia referencia pero contenido sí.</li>
+      <li>Separar header/footer con props dedicadas, no como items fake.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Qué problemas trae un keyboard handling malo?</h2>
+  <div class="answer">
+    <ul>
+      <li>Inputs tapados por el teclado — usuario no ve qué escribe.</li>
+      <li>Layout jumps / flickering al abrir/cerrar teclado.</li>
+      <li>Scroll incorrecto en forms largos.</li>
+      <li>Android vs iOS comportamientos distintos (adjustResize vs adjustPan).</li>
+    </ul>
+    <p>Soluciones: <code>KeyboardAvoidingView</code>, <code>react-native-keyboard-controller</code> (recomendado moderno), <code>KeyboardAwareScrollView</code>, configurar <code>android:windowSoftInputMode</code>, dismiss keyboard on tap outside, scroll to focused input.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Cómo manejás layouts responsive?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Flexbox</strong> — base de todo layout RN (ver pregunta 7).</li>
+      <li><code>useWindowDimensions</code> / <code>Dimensions</code> para breakpoints.</li>
+      <li>Porcentajes y <code>flex: 1</code> en lugar de pixels fijos.</li>
+      <li>Tablets: layouts alternativos (two-pane) con breakpoint hooks.</li>
+      <li><code>PixelRatio</code> para bordes finos (hairlineWidth).</li>
+      <li>Probar rotación y split-screen (Android).</li>
+    </ul>
+    <p>Evitar duplicar lógica iOS/Android salvo safe areas y platform quirks.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Cómo manejás safe areas?</h2>
+  <div class="answer">
+    <p><code>react-native-safe-area-context</code> es el estándar:</p>
+    <ul>
+      <li><code>SafeAreaProvider</code> en root.</li>
+      <li><code>SafeAreaView</code> o hook <code>useSafeAreaInsets()</code> para padding manual.</li>
+    </ul>
+    <p>Insets cubren notch, status bar, home indicator, navigation bar Android (edge-to-edge). En modals y headers custom, aplicar insets top/bottom explícitamente. Con React Navigation, <code>headerTransparent</code> requiere manejo manual.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Cómo funciona Flexbox en RN?</h2>
+  <div class="answer">
+    <p>RN usa Yoga (subset de Flexbox). Diferencias clave vs web:</p>
+    <ul>
+      <li><code>flexDirection</code> default es <code>'column'</code> (web es row).</li>
+      <li>Solo una dimensión flexible por eje — no hay <code>flex-basis: auto</code> idéntico a web en todos los casos.</li>
+      <li>No hay grid CSS nativo (usar librerías o flex tricks).</li>
+      <li><code>alignContent</code>, <code>flexWrap</code> soportados; gaps en versiones recientes.</li>
+    </ul>
+    <p>Patrón común: contenedor <code>flex: 1</code>, header/footer fijos, content <code>flex: 1</code> scrollable. Debug con borders temporales y Flipper layout inspector.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Qué diferencias hay entre RN styling y CSS web?</h2>
+  <div class="answer">
+    <table>
+      <tr><th>CSS Web</th><th>React Native</th></tr>
+      <tr><td>Stylesheets globales, cascada</td><td>StyleSheet objects, sin cascada — un estilo por view</td></tr>
+      <tr><td>Todas las unidades</td><td>Solo números (dp/pt), no px/em/rem/% limitado</td></tr>
+      <tr><td>display: grid, table</td><td>No soportado nativamente</td></tr>
+      <tr><td>box-shadow complejo</td><td>shadow* props iOS; elevation Android</td></tr>
+      <tr><td>:hover, :focus</td><td>Pressable states, no pseudo-selectors</td></tr>
+      <tr><td>inheritance de font</td><td>Text no hereda estilos del padre Text automáticamente en todos los casos</td></tr>
+    </table>
+    <p>Para web-like styling en RN: NativeWind (Tailwind), styled-components. Animaciones: Reanimated, no CSS transitions.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

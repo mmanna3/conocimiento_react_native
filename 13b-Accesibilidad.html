@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accesibilidad Mobile</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">13b · Específicos</span>
+  <h1>Accesibilidad</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Cómo manejás accessibility en mobile?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Labels:</strong> <code>accessibilityLabel</code>, <code>accessibilityHint</code> en elementos interactivos.</li>
+      <li><strong>Roles:</strong> <code>accessibilityRole="button"</code>, headers, links.</li>
+      <li><strong>State:</strong> <code>accessibilityState={{ selected, disabled, checked }}</code>.</li>
+      <li><strong>Touch targets</strong> mínimo 44×44 pt (WCAG / HIG).</li>
+      <li><strong>Color contrast</strong> — no solo color para estado (añadir icon/text).</li>
+      <li><strong>Dynamic Type</strong> — respetar font scaling (<code>allowFontScaling</code>, layouts flexibles).</li>
+      <li><strong>Reduce Motion</strong> — simplificar animaciones.</li>
+      <li><strong>Focus order</strong> lógico para VoiceOver/TalkBack.</li>
+    </ul>
+    <p>Accesibilidad no es feature final — integrar en design system desde el inicio.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Qué features de accessibility usaste?</h2>
+  <div class="answer">
+    <ul>
+      <li>VoiceOver (iOS) / TalkBack (Android) testing manual.</li>
+      <li><code>accessibilityLiveRegion</code> para anuncios dinámicos (toast, errors).</li>
+      <li><code>importantForAccessibility</code> para ocultar decoración.</li>
+      <li>Grouped elements: <code>accessible={true}</code> en container vs hijos.</li>
+      <li><code>testID</code> separado de accessibilityLabel (testID no es para a11y).</li>
+      <li>React Native ARIA props en New Architecture / web compat.</li>
+      <li>Haptic feedback complementario, no sustituto de labels.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Cómo testear accessibility?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Manual:</strong> recorrer app con VoiceOver/TalkBack activado — ¿cada acción es anunciada?</li>
+      <li><strong>Automated:</strong> axe-core (web), eslint-plugin-react-native-a11y.</li>
+      <li><strong>Checklist:</strong> contrast analyzers, font scale al 200%.</li>
+      <li><strong>User testing</strong> con personas que usan assistive tech — gold standard.</li>
+      <li>Incluir a11y en Definition of Done y QA regression.</li>
+    </ul>
+    <p>iOS Accessibility Inspector, Android Accessibility Scanner apps.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

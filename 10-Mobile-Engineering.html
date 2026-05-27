@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Engineering / Producción</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">10 · Mobile Engineering</span>
+  <h1>Producción y operaciones</h1>
+</header>
+
+<article>
+
+<section class="question">
+  <h2>1. ¿Cómo manejás releases graduales?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>App Store / Play Console</strong> — phased rollout (1% → 100% over days).</li>
+      <li><strong>Feature flags</strong> — código en prod pero feature off hasta activar por cohorte.</li>
+      <li><strong>OTA (EAS Updates)</strong> — JS bundle a subset de runtime versions.</li>
+      <li>Monitorear crash-free rate y KPIs por cohorte antes de expandir.</li>
+      <li>Rollback plan documentado en cada release.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>2. ¿Qué experiencia tenés con CI/CD?</h2>
+  <div class="answer">
+    <p>Mencioná stack concreto: GitHub Actions / Bitrise / CircleCI / EAS Workflows.</p>
+    <ul>
+      <li>PR: lint, typecheck, unit tests, optional Detox smoke.</li>
+      <li>Main: build artifacts, deploy staging, E2E nightly.</li>
+      <li>Tag release: signed builds, TestFlight/Internal track, submit stores.</li>
+      <li>Secrets management, caching, parallel jobs.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>3. ¿Cómo manejás rollback?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Store rollback</strong> — pausar phased rollout; no podés “revertir” binary en stores — subís fix forward hotfix.</li>
+      <li><strong>OTA rollback</strong> — republish bundle anterior en EAS/CodePush (rápido para bugs JS).</li>
+      <li><strong>Feature flags</strong> — kill switch instantáneo sin nuevo binary.</li>
+      <li>Backend compatibility — versionar API para soportar N-1 app versions.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Cómo monitoreás producción?</h2>
+  <div class="answer">
+    <p>Dashboards y alertas:</p>
+    <ul>
+      <li>Crash-free sessions / users (Sentry, Crashlytics).</li>
+      <li>ANR rate Android, slow renders.</li>
+      <li>API error rates, latency p95.</li>
+      <li>Business KPIs (conversion, retention) correlacionados con releases.</li>
+      <li>Alertas Slack/PagerDuty on SLO breach.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Qué métricas mobile mirás?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>Stability:</strong> crash-free rate, ANR, OOM kills.</li>
+      <li><strong>Performance:</strong> cold start time, TTI, FPS scroll, bundle size.</li>
+      <li><strong>Engagement:</strong> DAU/MAU, session length, retention D1/D7/D30.</li>
+      <li><strong>Quality:</strong> app store rating, review sentiment, support tickets spike.</li>
+      <li><strong>Release health:</strong> adoption rate of new version, error rate delta vs previous.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Cómo investigás crashes?</h2>
+  <div class="answer">
+    <ol>
+      <li>Triage: volume, severity, new vs regression, affected versions/OS.</li>
+      <li>Symbolicate stack; identificar frame app vs third-party.</li>
+      <li>Repro steps from breadcrumbs/user reports.</li>
+      <li>Bisect commits si regresión reciente.</li>
+      <li>Fix + test + hotfix release si P0.</li>
+      <li>Postmortem si impacto alto — root cause, prevention.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Cómo manejás hotfixes?</h2>
+  <div class="answer">
+    <ul>
+      <li>Branch <code>hotfix/x.y.z</code> desde tag de prod.</li>
+      <li>Fix mínimo — no scope creep.</li>
+      <li>Expedited QA en dispositivos críticos.</li>
+      <li>OTA si es JS-only; store expedited review si nativo.</li>
+      <li>Merge back to main; bump patch version.</li>
+      <li>Comunicar stakeholders timeline y riesgo.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Cómo trabajás con QA?</h2>
+  <div class="answer">
+    <ul>
+      <li>Test plans por feature con acceptance criteria claros.</li>
+      <li>Staging builds automáticos por PR/merge.</li>
+      <li>testID para automatización; documentar edge cases.</li>
+      <li>Bug triage conjunto — severidad, repro, logs.</li>
+      <li>QA early en refinamiento — shift-left.</li>
+      <li>Device matrix acordado (iOS versions, Android OEMs).</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>9. ¿Cómo manejás deuda técnica?</h2>
+  <div class="answer">
+    <ul>
+      <li>Inventario visible (Linear/Jira label “tech-debt”).</li>
+      <li>20% capacity por sprint o debt sprints per quarter.</li>
+      <li>Priorizar por interés (pain frequency × fix cost).</li>
+      <li>Boy scout rule en PRs tocados.</li>
+      <li>ADRs para no re-debatir; deprecations con deadline.</li>
+      <li>Metrics: build time trend, flaky tests, outdated deps count.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>10. ¿Cómo priorizás bugs?</h2>
+  <div class="answer">
+    <p>Matriz impacto × urgencia:</p>
+    <ul>
+      <li><strong>P0:</strong> crash loop, payment broken, data loss — hotfix inmediato.</li>
+      <li><strong>P1:</strong> feature core degradada, muchos usuarios — next release.</li>
+      <li><strong>P2:</strong> workaround exists, subset usuarios.</li>
+      <li><strong>P3:</strong> cosmetic, edge case.</li>
+    </ul>
+    <p>Factores: % usuarios afectados, revenue impact, reputación, costo fix, regresión vs pre-existing.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>11. ¿Qué harías si una release rompe producción?</h2>
+  <div class="answer">
+    <ol>
+      <li><strong>Contener</strong> — feature flag off, pausar rollout, OTA rollback.</li>
+      <li><strong>Comunicar</strong> — stakeholders, status page si aplica.</li>
+      <li><strong>Diagnóstico</strong> — crashes, logs, diff vs previous release.</li>
+      <li><strong>Fix</strong> — hotfix mínimo; no mezclar features nuevas.</li>
+      <li><strong>Verificar</strong> — QA targeted, monitor metrics 24-48h.</li>
+      <li><strong>Postmortem</strong> — qué falló en proceso (tests, rollout, review).</li>
+    </ol>
+    <p>Priorizar usuario y data integrity sobre culpa — blameless postmortem.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>
