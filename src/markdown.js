@@ -25,7 +25,8 @@ export function stripHorizontalRules(md) {
 }
 
 export function renderMarkdown(md) {
-  return marked.parse(stripHorizontalRules(md));
+  const html = marked.parse(stripHorizontalRules(md));
+  return html.replace(/<table\b/g, '<div class="table-wrap"><table').replace(/<\/table>/g, '</table></div>');
 }
 
 export function splitDocContent(content) {
