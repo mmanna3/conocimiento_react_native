@@ -1,17 +1,15 @@
 import './styles.css';
+import { getSlugFromPath, isIndexRoute } from './routes.js';
 import { renderDoc, renderIndex } from './views.js';
 
 const app = document.getElementById('app');
-
-function getSlugFromPath() {
-  const match = location.pathname.match(/^\/doc\/([^/]+)\/?$/);
-  return match ? decodeURIComponent(match[1]) : null;
-}
 
 function navigate() {
   const slug = getSlugFromPath();
   if (slug) {
     renderDoc(app, slug);
+  } else if (isIndexRoute()) {
+    renderIndex(app);
   } else {
     renderIndex(app);
   }
@@ -26,7 +24,7 @@ document.addEventListener('click', (event) => {
   if (url.origin !== location.origin) return;
 
   event.preventDefault();
-  history.pushState(null, '', url.pathname);
+  history.pushState(null, '', `${url.pathname}${url.search}${url.hash}`);
   navigate();
 });
 

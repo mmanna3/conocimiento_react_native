@@ -1,9 +1,6 @@
 import { getAllDocs, getDocBySlug, groupDocsBySection } from './docs.js';
 import { renderMarkdown, splitDocContent, wrapQuestionSections } from './markdown.js';
-
-function docUrl(slug) {
-  return `/doc/${slug}`;
-}
+import { docUrl, indexUrl } from './routes.js';
 
 function escapeHtml(text) {
   return text
@@ -67,7 +64,7 @@ export function renderDoc(container, slug) {
     document.title = 'No encontrado';
     container.innerHTML = `
       <div class="page page-doc">
-        <nav class="back"><a href="/" data-nav>← Índice</a></nav>
+        <nav class="back"><a href="${indexUrl()}" data-nav>← Índice</a></nav>
         <header>
           <h1>Documento no encontrado</h1>
           <p class="section-note">No existe <code>${escapeHtml(slug)}</code> en CONOCIMIENTO-RN-en-MD.</p>
@@ -84,7 +81,7 @@ export function renderDoc(container, slug) {
 
   container.innerHTML = `
     <div class="page page-doc">
-      <nav class="back"><a href="/" data-nav>← Índice</a></nav>
+      <nav class="back"><a href="${indexUrl()}" data-nav>← Índice</a></nav>
       <header>
         <span class="tag">${escapeHtml(doc.badge)}</span>
         <h1>${escapeHtml(title)}</h1>

@@ -1,3 +1,5 @@
+import { docUrl } from './routes.js';
+
 import { marked } from 'marked';
 
 marked.setOptions({ gfm: true, breaks: false });
@@ -8,7 +10,7 @@ marked.use({
       if (href?.endsWith('.md')) {
         const slug = href.replace(/^\.\//, '').replace(/\.md$/, '');
         const t = title ? ` title="${title}"` : '';
-        return `<a href="/doc/${slug}" data-nav${t}>${text}</a>`;
+        return `<a href="${docUrl(slug)}" data-nav${t}>${text}</a>`;
       }
       const t = title ? ` title="${title}"` : '';
       const external =
