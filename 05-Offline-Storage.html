@@ -3,87 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline Storage</title>
+  <title>Offline First</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
 <header>
-  <span class="tag">05 · Offline Storage</span>
-  <h1>Storage y Persistencia</h1>
+  <span class="tag">05 · Offline First</span>
+  <h1>Offline First</h1>
 </header>
 
 <article>
 
 <section class="question">
-  <h2>1. ¿Qué opciones de storage existen en RN?</h2>
-  <div class="answer">
-    <table>
-      <tr><th>Opción</th><th>Uso</th></tr>
-      <tr><td>AsyncStorage</td><td>Key-value simple, strings, prefs no sensibles</td></tr>
-      <tr><td>MMKV</td><td>Key-value rápido, sync, binary-safe</td></tr>
-      <tr><td>SQLite (expo-sqlite, op-sqlite)</td><td>Relacional, queries, datasets medianos</td></tr>
-      <tr><td>Realm / WatermelonDB</td><td>ORM offline-first, sync, listas reactivas</td></tr>
-      <tr><td>SecureStore / Keychain</td><td>Tokens, secrets pequeños</td></tr>
-      <tr><td>FileSystem</td><td>Archivos, media, downloads</td></tr>
-    </table>
-  </div>
-</section>
-
-<section class="question">
-  <h2>2. ¿Cuándo usar AsyncStorage?</h2>
-  <div class="answer">
-    <ul>
-      <li>Preferencias de usuario (theme, locale, onboarding completed).</li>
-      <li>Flags simples, cache pequeño serializado JSON.</li>
-      <li>redux-persist / persist de React Query (con migraciones).</li>
-    </ul>
-    <p>Es async, string-only, sin encriptación nativa — no para datos sensibles ni datasets grandes.</p>
-  </div>
-</section>
-
-<section class="question">
-  <h2>3. ¿Qué limitaciones tiene?</h2>
-  <div class="answer">
-    <ul>
-      <li>Solo strings — serialización manual JSON.</li>
-      <li>Async — no ideal para reads frecuentes en hot path (usar MMKV).</li>
-      <li>Sin query/index — todo key-value flat.</li>
-      <li>Límite de tamaño (~6MB iOS warn, variable Android) — no escala.</li>
-      <li>No encriptado — accesible en device comprometido.</li>
-      <li>Operaciones batch lentas comparado con MMKV/SQLite.</li>
-    </ul>
-  </div>
-</section>
-
-<section class="question">
-  <h2>4. ¿Qué usarías para storage seguro?</h2>
-  <div class="answer">
-    <ul>
-      <li><strong>iOS Keychain</strong> / <strong>Android Keystore</strong> via <code>react-native-keychain</code> o Expo SecureStore.</li>
-      <li>Biometric protection (<code>ACCESS_CONTROL.BIOMETRY</code>) para tokens.</li>
-      <li>Encriptar valores grandes con clave en Keystore (react-native-encrypted-storage).</li>
-    </ul>
-    <p>Nunca AsyncStorage para refresh tokens, PII, credenciales. Asumir que el filesystem del app es inspeccionable en devices rooteados/jailbroken.</p>
-  </div>
-</section>
-
-<section class="question">
-  <h2>5. ¿Qué usarías para datos grandes?</h2>
-  <div class="answer">
-    <ul>
-      <li><strong>SQLite</strong> — catálogos, historial, offline forms estructurados.</li>
-      <li><strong>WatermelonDB</strong> — listas reactivas con lazy loading, sync-friendly.</li>
-      <li><strong>Realm</strong> — object DB con sync Atlas (MongoDB).</li>
-      <li><strong>FileSystem</strong> — blobs, imágenes descargadas, PDFs.</li>
-    </ul>
-    <p>AsyncStorage no escala. Migrar a SQLite cuando necesitás queries, índices, o &gt; few MB.</p>
-  </div>
-</section>
-
-<section class="question">
-  <h2>6. ¿Cómo sincronizar datos offline?</h2>
+  <h2>1. ¿Cómo sincronizar datos offline?</h2>
   <div class="answer">
     <p>Patrón outbox / mutation queue:</p>
     <ol>
@@ -98,7 +32,7 @@
 </section>
 
 <section class="question">
-  <h2>7. ¿Cómo resolver conflictos de sincronización?</h2>
+  <h2>2. ¿Cómo resolver conflictos de sincronización?</h2>
   <div class="answer">
     <p>Estrategias (elegir por dominio):</p>
     <ul>
@@ -113,7 +47,7 @@
 </section>
 
 <section class="question">
-  <h2>8. ¿Cómo diseñarías offline-first?</h2>
+  <h2>3. ¿Cómo diseñarías offline-first?</h2>
   <div class="answer">
     <ul>
       <li>Local DB como source of truth inmediato — UI lee siempre de local.</li>
@@ -124,6 +58,72 @@
       <li>Tests: airplane mode, flaky network, kill app mid-sync.</li>
     </ul>
     <p>Referencias: Offline First manifesto, WatermelonDB, Relay/store-and-network (web analog).</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>4. ¿Qué opciones de storage existen en RN?</h2>
+  <div class="answer">
+    <table>
+      <tr><th>Opción</th><th>Uso</th></tr>
+      <tr><td>AsyncStorage</td><td>Key-value simple, strings, prefs no sensibles</td></tr>
+      <tr><td>MMKV</td><td>Key-value rápido, sync, binary-safe</td></tr>
+      <tr><td>SQLite (expo-sqlite, op-sqlite)</td><td>Relacional, queries, datasets medianos</td></tr>
+      <tr><td>Realm / WatermelonDB</td><td>ORM offline-first, sync, listas reactivas</td></tr>
+      <tr><td>SecureStore / Keychain</td><td>Tokens, secrets pequeños</td></tr>
+      <tr><td>FileSystem</td><td>Archivos, media, downloads</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="question">
+  <h2>5. ¿Cuándo usar AsyncStorage?</h2>
+  <div class="answer">
+    <ul>
+      <li>Preferencias de usuario (theme, locale, onboarding completed).</li>
+      <li>Flags simples, cache pequeño serializado JSON.</li>
+      <li>redux-persist / persist de React Query (con migraciones).</li>
+    </ul>
+    <p>Es async, string-only, sin encriptación nativa — no para datos sensibles ni datasets grandes.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>6. ¿Qué limitaciones tiene?</h2>
+  <div class="answer">
+    <ul>
+      <li>Solo strings — serialización manual JSON.</li>
+      <li>Async — no ideal para reads frecuentes en hot path (usar MMKV).</li>
+      <li>Sin query/index — todo key-value flat.</li>
+      <li>Límite de tamaño (~6MB iOS warn, variable Android) — no escala.</li>
+      <li>No encriptado — accesible en device comprometido.</li>
+      <li>Operaciones batch lentas comparado con MMKV/SQLite.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>7. ¿Qué usarías para storage seguro?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>iOS Keychain</strong> / <strong>Android Keystore</strong> via <code>react-native-keychain</code> o Expo SecureStore.</li>
+      <li>Biometric protection (<code>ACCESS_CONTROL.BIOMETRY</code>) para tokens.</li>
+      <li>Encriptar valores grandes con clave en Keystore (react-native-encrypted-storage).</li>
+    </ul>
+    <p>Nunca AsyncStorage para refresh tokens, PII, credenciales. Asumir que el filesystem del app es inspeccionable en devices rooteados/jailbroken.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. ¿Qué usarías para datos grandes?</h2>
+  <div class="answer">
+    <ul>
+      <li><strong>SQLite</strong> — catálogos, historial, offline forms estructurados.</li>
+      <li><strong>WatermelonDB</strong> — listas reactivas con lazy loading, sync-friendly.</li>
+      <li><strong>Realm</strong> — object DB con sync Atlas (MongoDB).</li>
+      <li><strong>FileSystem</strong> — blobs, imágenes descargadas, PDFs.</li>
+    </ul>
+    <p>AsyncStorage no escala. Migrar a SQLite cuando necesitás queries, índices, o &gt; few MB.</p>
   </div>
 </section>
 
