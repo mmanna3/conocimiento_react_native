@@ -1,11 +1,8 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  root: '.',
+  appType: 'spa',
   server: {
-    open: '/PREGUNTAS.html',
-  },
-  preview: {
-    open: '/Preguntas-Importantes.html',
+    open: true,
   },
 });

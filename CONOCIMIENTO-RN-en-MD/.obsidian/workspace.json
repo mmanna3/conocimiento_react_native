@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "07-OTROS.md",
+                "file": "02-RN.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "07-OTROS"
+              "title": "02-RN"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "07-OTROS.md",
+                "file": "02-RN.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 07-OTROS"
+              "title": "Backlinks for 02-RN"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "07-OTROS.md",
+                "file": "02-RN.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 07-OTROS"
+              "title": "Outgoing links from 02-RN"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "07-OTROS.md",
+                "file": "02-RN.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 07-OTROS"
+              "title": "Outline of 02-RN"
             }
           }
         ]
@@ -185,8 +185,8 @@
   },
   "active": "02c70fc6376f5e6c",
   "lastOpenFiles": [
-    "05-RNGH-REANIMATED.md",
     "07-OTROS.md",
+    "05-RNGH-REANIMATED.md",
     "06b-TESTING-detox.md",
     "06a-TESTING-fundamentos.md",
     "04-OFFLINE-FIRST.md",
