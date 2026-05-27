@@ -92,84 +92,14 @@
 <section class="question">
   <h2>7. ¿Qué es un stale closure?</h2>
   <div class="answer">
-    <p>Una <em>stale closure</em> ocurre cuando una función “captura” variables de un render anterior y sigue usándolas aunque el state/props ya cambió. Cada render de tu componente es una “foto” del state en ese momento; cualquier callback creado en ese render (handlers, effects, timers) sigue viendo esa foto aunque React ya renderizó de nuevo con valores nuevos.</p>
-
-    <p><strong>El bug clásico: <code>setInterval</code> con deps vacías</strong></p>
-    <p>Querés loguear el contador cada segundo. El effect corre una sola vez al montar; el callback del interval queda atado al <code>count</code> del primer render (0):</p>
-    <pre><code>function Counter() {
-  const [count, setCount] = useState(0);
-
-  useEffect(() =&gt; {
-    const id = setInterval(() =&gt; {
-      console.log(count); // siempre 0 — stale closure
-    }, 1000);
-    return () =&gt; clearInterval(id);
-  }, []); // count no está en deps
-
-  return (
-    &lt;button onPress={() =&gt; setCount(c =&gt; c + 1)}&gt;
-      {count}
-    &lt;/button&gt;
-  );
-}</code></pre>
-    <p>El botón muestra 1, 2, 3… pero la consola repite 0. El interval no “ve” los re-renders: solo ve la closure del mount.</p>
-
-    <p><strong>Solución 1: forma funcional de <code>setState</code></strong></p>
-    <p>Si solo necesitás <em>actualizar</em> state a partir del valor anterior (no leerlo para otra cosa), no captures <code>count</code> — pedile a React el valor fresco:</p>
-    <pre><code>useEffect(() =&gt; {
-  const id = setInterval(() =&gt; {
-    setCount(c =&gt; c + 1); // React pasa el state actual
-  }, 1000);
-  return () =&gt; clearInterval(id);
-}, []);</code></pre>
-    <p>No sirve si el interval debe <em>leer</em> <code>count</code> para otra lógica (enviar analytics, comparar con un umbral, etc.).</p>
-
-    <p><strong>Solución 2: incluir la variable en el dependency array</strong></p>
-    <p>Al agregar <code>count</code>, React desmonta el effect anterior y crea un interval nuevo con la closure actualizada:</p>
-    <pre><code>useEffect(() =&gt; {
-  const id = setInterval(() =&gt; {
-    console.log(count); // 0, luego 1, luego 2…
-  }, 1000);
-  return () =&gt; clearInterval(id);
-}, [count]);</code></pre>
-    <p>Funciona, pero cada cambio de <code>count</code> cancela y recrea el timer. Para suscripciones caras (WebSocket, listeners nativos, polling) eso es ruidoso e ineficiente.</p>
-
-    <p><strong>Solución 3: <code>useRef</code> — último valor sin re-suscribirte</strong></p>
-    <p>Un ref es una caja mutable que persiste entre renders y no dispara re-render al cambiar. El truco: en cada render copiás el valor actual a <code>ref.current</code>; el effect con <code>[]</code> lee siempre <code>countRef.current</code>, que ya fue actualizado en el último render:</p>
-    <pre><code>function Counter() {
-  const [count, setCount] = useState(0);
-  const countRef = useRef(count);
-
-  // Sincronizar ref con el state en cada render
-  countRef.current = count;
-
-  useEffect(() =&gt; {
-    const id = setInterval(() =&gt; {
-      console.log(countRef.current); // siempre el último count
-    }, 1000);
-    return () =&gt; clearInterval(id);
-  }, []); // el interval se crea una sola vez
-
-  return (
-    &lt;button onPress={() =&gt; setCount(c =&gt; c + 1)}&gt;
-      {count}
-    &lt;/button&gt;
-  );
-}</code></pre>
-    <p>El interval sigue siendo el mismo (misma suscripción), pero lee el valor fresco vía ref. Mismo patrón para props, callbacks o flags que un listener largo necesita sin re-registrarse.</p>
-
-    <p><strong>Variante: ref para un callback estable</strong></p>
-    <p>Si el interval llama a una función que cambia cada render, guardá la última versión en un ref y exponé un wrapper estable:</p>
-    <pre><code>const onTickRef = useRef(onTick);
-onTickRef.current = onTick;
-
-useEffect(() =&gt; {
-  const id = setInterval(() =&gt; onTickRef.current(), 1000);
-  return () =&gt; clearInterval(id);
-}, []);</code></pre>
-    <p>Así <code>onTick</code> puede cerrar sobre props/state del render actual sin meter <code>onTick</code> en las deps del effect.</p>
-
-    <p>Resumen para entrevista: stale closure = callback viejo con variables viejas. Arreglalo con updater funcional (solo para setState), deps correctas (re-suscribe), o ref (lee lo último sin re-suscribir).</p>
+    <p>Una <em>stale closure</em> ocurre cuando una función “captura” variables de un render anterior y sigue usándolas aunque el state/props ya cambió.</p>
+    <p>Ejemplo clásico: un <code>setInterval</code> dentro de <code>useEffect([])</code> que lee <code>count</code> — siempre ve el valor inicial porque la closure no se recreó.</p>
+    <p>Soluciones:</p>
+    <ul>
+      <li>Incluir la variable en el dependency array.</li>
+      <li>Usar la forma funcional de setState: <code>setCount(c =&gt; c + 1)</code>.</li>
+      <li>Guardar el valor actual en un <code>useRef</code> si necesitás la última versión sin re-suscribirte.</li>
+    </ul>
   </div>
 </section>
 

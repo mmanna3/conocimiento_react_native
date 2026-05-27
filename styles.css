@@ -40,7 +40,34 @@ header h1 { font-size: 1.5rem; margin: .25rem 0 0; letter-spacing: -.02em; }
   color: var(--accent);
   margin: 0 0 .85rem;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
 }
+.tag-important {
+  display: inline-block;
+  background: #fef3c7;
+  color: #92400e;
+  padding: .15rem .5rem;
+  border-radius: 4px;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.question.important {
+  border-left: 3px solid #f59e0b;
+  padding-left: .85rem;
+  margin-left: -.85rem;
+}
+.important-source {
+  font-size: .85rem;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+}
+.important-source a { color: var(--accent); }
 .answer p { margin: .5rem 0; }
 .answer ul, .answer ol { margin: .5rem 0; padding-left: 1.35rem; }
 .answer li { margin: .25rem 0; }

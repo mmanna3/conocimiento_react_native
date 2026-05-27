@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JavaScript — Fundamentos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="back"><a href="PREGUNTAS.html">← Índice</a></nav>
+<header>
+  <span class="tag">00 · JavaScript</span>
+  <h1>JavaScript — Fundamentos</h1>
+</header>
+
+<article>
+
+<section class="question important" id="q1">
+  <h2>1. ¿Qué es una closure? <span class="tag-important">Importante</span></h2>
+  <div class="answer">
+    <p>Una <strong>closure</strong> es una función que recuerda el entorno léxico (variables del scope) donde fue <em>creada</em>, aunque ese scope ya terminó de ejecutarse. En la práctica: “la función lleva sus variables a cuestas”.</p>
+    <pre><code>function crearContador() {
+  let n = 0;
+  return {
+    incrementar: () =&gt; ++n,
+    leer: () =&gt; n,
+  };
+}
+
+const c = crearContador();
+c.incrementar();
+c.leer(); // 1 — `n` sigue viva gracias a las closures</code></pre>
+    <p>Se usan para encapsular estado privado, factories, callbacks y middleware. En React, los handlers y effects son closures; si capturan valores viejos, hablás de <em>stale closure</em> (ver <a href="01a-React-Hooks.html">Hooks · pregunta 7</a>).</p>
+  </div>
+</section>
+
+<section class="question important" id="q2">
+  <h2>2. ¿Qué es el scope léxico? <span class="tag-important">Importante</span></h2>
+  <div class="answer">
+    <p>El scope se resuelve por <strong>dónde está escrito el código</strong>, no por dónde se invoca la función (a diferencia de <code>this</code>, que sí depende del call site en funciones normales).</p>
+    <pre><code>const x = 10;
+
+function externa() {
+  const x = 20;
+  function interna() {
+    console.log(x); // 20 — busca hacia arriba en la cadena léxica
+  }
+  return interna;
+}</code></pre>
+    <p>Bloques <code>{ }</code> con <code>let</code>/<code>const</code> crean scope de bloque; <code>var</code> solo respeta funciones, no bloques <code>if/for</code>.</p>
+  </div>
+</section>
+
+<section class="question important" id="q3">
+  <h2>3. Diferencia entre var, let y const <span class="tag-important">Importante</span></h2>
+  <div class="answer">
+    <table>
+      <tr><th></th><th>var</th><th>let / const</th></tr>
+      <tr><td>Scope</td><td>Función (o global)</td><td>Bloque</td></tr>
+      <tr><td>Hoisting</td><td>Sí, inicializada como <code>undefined</code></td><td>TDZ hasta la línea de declaración</td></tr>
+      <tr><td>Reasignación</td><td>Sí</td><td><code>let</code> sí; <code>const</code> no el binding, sí mutar el objeto</td></tr>
+      <tr><td>Re-declarar en mismo scope</td><td>Sí</td><td>No</td></tr>
+    </table>
+    <p>Bug clásico en entrevistas — loop con <code>var</code>:</p>
+    <pre><code>for (var i = 0; i &lt; 3; i++) {
+  setTimeout(() =&gt; console.log(i), 0);
+}
+// 3, 3, 3 — una sola `i` compartida
+
+for (let j = 0; j &lt; 3; j++) {
+  setTimeout(() =&gt; console.log(j), 0);
+}
+// 0, 1, 2 — cada iteración tiene su propio `j`</code></pre>
+    <p>En código moderno: <code>const</code> por default, <code>let</code> si reasignás, evitá <code>var</code>.</p>
+  </div>
+</section>
+
+<section class="question important" id="q4">
+  <h2>4. ¿Qué es hoisting y la Temporal Dead Zone (TDZ)? <span class="tag-important">Importante</span></h2>
+  <div class="answer">
+    <p><strong>Hoisting:</strong> antes de ejecutar el código, el motor registra declaraciones. Con <code>var</code>, la variable existe desde el inicio del scope como <code>undefined</code> hasta la asignación:</p>
+    <pre><code>console.log(a); // undefined (no ReferenceError)
+var a = 1;</code></pre>
+    <p><code>let</code> y <code>const</code> también se “elevan”, pero quedan en la <strong>TDZ</strong> hasta la línea de declaración — acceder antes lanza <code>ReferenceError</code>:</p>
+    <pre><code>console.log(b); // ReferenceError
+let b = 1;</code></pre>
+    <p>Las <code>function declarations</code> se elevan completas (podés llamarlas antes en el mismo scope). Las <code>function expressions</code> con <code>const</code> siguen la TDZ.</p>
+  </div>
+</section>
+
+<section class="question important" id="q5">
+  <h2>5. ¿Cómo funciona el event loop? <span class="tag-important">Importante</span></h2>
+  <div class="answer">
+    <p>JavaScript en el navegador/RN (JS thread) es <strong>single-threaded</strong>: una call stack. Lo asíncrono no es paralelismo de threads JS, sino delegar y retomar vía el event loop.</p>
+    <ol>
+      <li>Ejecutás código síncrono en la stack hasta vaciarla.</li>
+      <li>Callbacks asíncronos (timers, I/O, DOM) van a colas.</li>
+      <li>Cuando la stack está libre, el loop drena <strong>microtasks</strong> (Promises, <code>queueMicrotask</code>) hasta agotarlas.</li>
+      <li>Luego toma un <strong>macrotask</strong> (ej. un callback de <code>setTimeout</code>) y repite.</li>
+    </ol>
+    <pre><code>console.log('1');
+
+setTimeout(() =&gt; console.log('2'), 0);
+
+Promise.resolve().then(() =&gt; console.log('3'));
+
+console.log('4');
+// 1, 4, 3, 2 — los microtasks van antes que el siguiente macrotask</code></pre>
+    <p>Entender esto explica por qué un <code>setInterval</code> “ve” valores viejos si cerró sobre ellos al crearse, y por qué bloquear la stack con CPU pesada congela la UI.</p>
+  </div>
+</section>
+
+<section class="question important" id="q6">
+  <h2>6. Promesas y async/await <span class="tag-important">Importante</span></h2>
+  <div class="answer">
+    <p>Una <strong>Promise</strong> representa un valor futuro: <code>pending</code> → <code>fulfilled</code> o <code>rejected</code>. Encadena con <code>.then/.catch/.finally</code>; errores no capturados → <code>unhandled rejection</code>.</p>
+    <pre><code>async function fetchUser(id) {
+  const res = await fetch(`/api/users/${id}`);
+  if (!res.ok) throw new Error(res.statusText);
+  return res.json();
+}</code></pre>
+    <p><code>async/await</code> es azúcar sintáctica sobre Promises: la función <code>async</code> siempre devuelve una Promise; <code>await</code> pausa esa función hasta resolver (sin bloquear el thread — cede al loop).</p>
+    <p>Patrones útiles: <code>Promise.all</code> (paralelo, falla si una falla), <code>Promise.allSettled</code> (siempre espera todas), <code>Promise.race</code>, timeouts con <code>AbortController</code>.</p>
+  </div>
+</section>
+
+<section class="question important" id="q7">
+  <h2>7. ¿Cómo funciona this? <span class="tag-important">Importante</span></h2>
+  <div class="answer">
+    <p><code>this</code> depende de <strong>cómo se llama</strong> la función, no de dónde se definió (salvo arrow functions y bind explícito):</p>
+    <ul>
+      <li>Llamada normal: <code>this</code> = <code>undefined</code> en strict mode, o el objeto global en sloppy.</li>
+      <li><code>obj.metodo()</code>: <code>this</code> = <code>obj</code>.</li>
+      <li><code>new Fn()</code>: <code>this</code> = instancia nueva.</li>
+      <li><code>call/apply/bind</code>: fijás <code>this</code> manualmente.</li>
+      <li><strong>Arrow functions</strong>: no tienen <code>this</code> propio — heredan el del scope léxico envolvente (ideal para callbacks en clases React si no bindeás).</li>
+    </ul>
+    <pre><code>const obj = {
+  name: 'Ana',
+  saludar() { return this.name; },
+  saludarArrow: () =&gt; this?.name, // `this` del módulo/global, no de obj
+};</code></pre>
+  </div>
+</section>
+
+<section class="question">
+  <h2>8. Prototipos y herencia</h2>
+  <div class="answer">
+    <p>JS usa <strong>herencia prototípica</strong>: cada objeto tiene un prototipo interno (<code>[[Prototype]]</code>, accesible como <code>Object.getPrototypeOf(obj)</code>). Si una propiedad no está en el objeto, se busca en la cadena de prototipos.</p>
+    <pre><code>function Persona(nombre) {
+  this.nombre = nombre;
+}
+Persona.prototype.saludar = function () {
+  return `Hola, ${this.nombre}`;
+};
+
+const p = new Persona('Ana');
+p.saludar(); // busca en `p`, luego en Persona.prototype</code></pre>
+    <p>Clases ES6 son azúcar sobre constructors + <code>prototype</code>. Para objetos planos, preferí composición; <code>class extends</code> cuando modelás jerarquías claras.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>9. Pasar por valor vs por referencia</h2>
+  <div class="answer">
+    <p>Primitivos (<code>number</code>, <code>string</code>, <code>boolean</code>, <code>null</code>, <code>undefined</code>, <code>symbol</code>, <code>bigint</code>) se pasan <strong>por valor</strong> — la función recibe una copia.</p>
+    <p>Objetos, arrays y funciones se pasan <strong>por referencia al mismo objeto</strong> — podés mutar el contenido y afecta al original:</p>
+    <pre><code>function agregarItem(carrito, item) {
+  carrito.push(item); // muta el array original
+}
+
+const c = [];
+agregarItem(c, 'pan');
+console.log(c); // ['pan']</code></pre>
+    <p>En React/RN esto motiva inmutabilidad en state: devolvé copias nuevas (<code>[...arr, x]</code>, <code>{ ...obj, key: val }</code>) para que la reconciliación detecte cambios.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>10. == vs === y coerción</h2>
+  <div class="answer">
+    <p><code>===</code> (igualdad estricta) compara valor y tipo, sin conversión. <code>==</code> aplica reglas de coerción (legacy, difícil de predecir):</p>
+    <pre><code>0 == false;   // true
+0 === false;  // false
+'' == false;  // true
+null == undefined; // true (único caso útil de ==)
+null === undefined; // false</code></pre>
+    <p>Regla práctica: usá <code>===</code> y <code>!==</code> salvo que quieras explícitamente <code>x == null</code> (cubre <code>null</code> y <code>undefined</code>). Para objetos, <code>===</code> compara referencia, no contenido profundo.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>11. Copia superficial vs profunda</h2>
+  <div class="answer">
+    <p><strong>Shallow copy</strong> — un nivel nuevo, objetos anidados siguen compartiendo referencia:</p>
+    <pre><code>const original = { a: 1, nested: { b: 2 } };
+const copia = { ...original };
+copia.nested.b = 99;
+console.log(original.nested.b); // 99</code></pre>
+    <p><strong>Deep copy</strong> — árbol independiente: <code>structuredClone(obj)</code> (moderno), o librerías para grafos con referencias circulares. <code>JSON.parse(JSON.stringify(x))</code> pierde <code>Date</code>, <code>undefined</code>, funciones y referencias circulares.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>12. Debounce vs throttle</h2>
+  <div class="answer">
+    <p><strong>Debounce</strong> — ejecuta después de que dejás de disparar el evento (ej. búsqueda al dejar de tipear 300 ms).</p>
+    <p><strong>Throttle</strong> — como máximo una ejecución cada X ms (ej. scroll o resize para no saturar).</p>
+    <pre><code>function debounce(fn, ms) {
+  let t;
+  return (...args) =&gt; {
+    clearTimeout(t);
+    t = setTimeout(() =&gt; fn(...args), ms);
+  };
+}
+
+function throttle(fn, ms) {
+  let last = 0;
+  return (...args) =&gt; {
+    const now = Date.now();
+    if (now - last &gt;= ms) {
+      last = now;
+      fn(...args);
+    }
+  };
+}</code></pre>
+    <p>En RN/React suelen vivir en custom hooks o librerías; conocer la diferencia evita re-renders y llamadas API excesivas.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>13. Módulos ES (import / export)</h2>
+  <div class="answer">
+    <p>ES Modules son estáticos: imports resueltos en parse time, tree-shakeables.</p>
+    <pre><code>// utils.js
+export const PI = 3.14;
+export default function suma(a, b) { return a + b; }
+
+// app.js
+import suma, { PI } from './utils.js';</code></pre>
+    <ul>
+      <li><code>export / export default</code> — API pública del módulo.</li>
+      <li><code>import</code> — bindings en vivo para exports nombrados (read-only).</li>
+      <li>CommonJS (<code>require</code>) aún aparece en Node tooling y configs; Metro/Bundlers unifican a ESM en app RN.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="question">
+  <h2>14. Sintaxis moderna útil en entrevistas</h2>
+  <div class="answer">
+    <pre><code>// Optional chaining — evita crashes por null/undefined
+const ciudad = usuario?.direccion?.ciudad;
+
+// Nullish coalescing — solo si null o undefined (no si 0 o '')
+const limit = config.limit ?? 10;
+
+// Destructuring
+const { id, name } = user;
+const [first, ...rest] = items;
+
+// Spread / rest
+const merged = { ...defaults, ...overrides };
+function logAll(level, ...messages) { }</code></pre>
+    <p>Conocer cuándo usar <code>??</code> vs <code>||</code> es pregunta frecuente: <code>||</code> trata <code>0</code> y <code>''</code> como falsy.</p>
+  </div>
+</section>
+
+<section class="question">
+  <h2>15. Closures, timers y valores “viejos” (sin React)</h2>
+  <div class="answer">
+    <p>Antes de stale closures en hooks, el patrón aparece en JS puro: un callback asíncrono captura variables del scope donde se <em>creó</em>.</p>
+    <pre><code>function iniciar() {
+  let count = 0;
+
+  setInterval(() =&gt; {
+    console.log(count); // siempre lee el `count` de iniciar
+  }, 1000);
+
+  return () =&gt; { count += 1; }; // si alguien llama esto, el interval ve el nuevo count
+}</code></pre>
+    <p>Acá hay <strong>un solo</strong> binding <code>count</code> — mutarlo o reasignarlo en el mismo scope lo ven todos los callbacks que cerraron sobre esa variable.</p>
+    <p>En React cada render crea <strong>nuevos</strong> bindings (<code>const [count, setCount] = ...</code>); un effect con <code>[]</code> deja timers cerrados sobre el render #1. Por eso existen deps, updaters funcionales y refs — ver <a href="01a-React-Hooks.html">Hooks de React</a>.</p>
+  </div>
+</section>
+
+</article>
+</body>
+</html>

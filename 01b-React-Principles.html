@@ -16,8 +16,8 @@
 
 <article>
 
-<section class="question">
-  <h2>1. ¿Qué es el Virtual DOM?</h2>
+<section class="question important" id="q1">
+  <h2>1. ¿Qué es el Virtual DOM? <span class="tag-important">Importante</span></h2>
   <div class="answer">
     <p>El Virtual DOM es una representación en memoria del UI como un árbol de objetos JavaScript (React elements). React no manipula el DOM nativo directamente en cada cambio de state — primero construye/actualiza el VDOM, lo compara con la versión anterior y aplica solo el diff mínimo al DOM real.</p>
     <p>Beneficios: abstracción declarativa, batching de updates, y un punto central para optimizaciones (reconciliation, Concurrent features). No es “más rápido que el DOM siempre” — en updates simples el overhead puede existir; gana en apps complejas con muchos updates parciales.</p>
@@ -57,8 +57,8 @@
   </div>
 </section>
 
-<section class="question">
-  <h2>5. ¿Qué diferencia hay entre controlled y uncontrolled components?</h2>
+<section class="question important" id="q5">
+  <h2>5. ¿Qué diferencia hay entre controlled y uncontrolled components? <span class="tag-important">Importante</span></h2>
   <div class="answer">
     <p><strong>Controlled:</strong> React es la fuente de verdad del valor. <code>value={state}</code> + <code>onChange</code> que actualiza state. Cada keystroke pasa por React.</p>
     <p><strong>Uncontrolled:</strong> el DOM mantiene el valor. Accedés con <code>ref</code> (<code>ref.current.value</code>). React no controla cada cambio.</p>
