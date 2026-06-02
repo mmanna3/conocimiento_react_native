@@ -4,6 +4,12 @@ const modules = import.meta.glob('../CONOCIMIENTO-RN-en-MD/*.md', {
   eager: true,
 });
 
+const ultraModules = import.meta.glob('../CONOCIMIENTO-ULTRA-RESUMEN/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
+
 const SECTION_META = {
   '00': {
     title: 'JavaScript',
@@ -39,16 +45,26 @@ const SECTION_META = {
   },
 };
 
-function parseDoc(path, content) {
-  const file = path.split('/').pop();
-  const slug = file.replace(/\.md$/, '');
-  const sectionKey = file.match(/^(\d+)/)?.[1] ?? '99';
-  const badge = file.replace(/\.md$/, '').match(/^[\da-z]+/)?.[0] ?? slug;
-  const titleMatch = content.match(/^#\s+(.+)$/m);
-  const title = titleMatch ? titleMatch[1].trim() : slug;
-  const questions = (content.match(/^##\s+\d+\./gm) || []).length;
+export const ULTRA_SECTION = {
+  key: 'ultra',
+  title: 'Ultra resumen',
+  desc: 'Bullets mínimos para memorizar. Sin ejemplos largos.',
+};
 
-  return { file, slug, sectionKey, badge, title, questions, content };
+function parseDoc(path, content, { source = 'main' } = {}) {
+  const file = path.split('/').pop();
+  const baseSlug = file.replace(/\.md$/, '');
+  const slug = source === 'ultra' ? `ultra-${baseSlug}` : baseSlug;
+  const sectionKey = file.match(/^(\d+)/)?.[1] ?? '99';
+  const badge = file.replace(/\.md$/, '').match(/^[\da-z]+/)?.[0] ?? baseSlug;
+  const titleMatch = content.match(/^#\s+(.+)$/m);
+  const title = titleMatch ? titleMatch[1].trim() : baseSlug;
+  const questions =
+    source === 'ultra'
+      ? (content.match(/^##\s+/gm) || []).length
+      : (content.match(/^##\s+\d+\./gm) || []).length;
+
+  return { file, slug, sectionKey, badge, title, questions, content, source };
 }
 
 export function getAllDocs() {
@@ -57,8 +73,14 @@ export function getAllDocs() {
     .sort((a, b) => a.file.localeCompare(b.file, undefined, { numeric: true }));
 }
 
+export function getAllUltraDocs() {
+  return Object.entries(ultraModules)
+    .map(([path, content]) => parseDoc(path, content, { source: 'ultra' }))
+    .sort((a, b) => a.file.localeCompare(b.file, undefined, { numeric: true }));
+}
+
 export function getDocBySlug(slug) {
-  return getAllDocs().find((doc) => doc.slug === slug) ?? null;
+  return getAllDocs().find((doc) => doc.slug === slug) ?? getAllUltraDocs().find((doc) => doc.slug === slug) ?? null;
 }
 
 export function groupDocsBySection(docs) {

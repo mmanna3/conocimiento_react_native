@@ -84,6 +84,14 @@ body {
   border-radius: 4px;
 }
 
+.index-section-ultra > h2 {
+  border-bottom-color: #d97706;
+}
+
+.section-num-ultra {
+  background: #d97706;
+}
+
 .section-desc {
   color: var(--muted);
   font-size: 0.9rem;
@@ -182,6 +190,11 @@ nav.back a:hover {
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.tag-ultra {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .doc-intro {

@@ -1,4 +1,4 @@
-import { getAllDocs, getDocBySlug, groupDocsBySection } from './docs.js';
+import { getAllDocs, getAllUltraDocs, getDocBySlug, groupDocsBySection, ULTRA_SECTION } from './docs.js';
 import { renderMarkdown, splitDocContent, wrapQuestionSections } from './markdown.js';
 import { docUrl, indexUrl } from './routes.js';
 
@@ -10,8 +10,23 @@ function escapeHtml(text) {
     .replace(/"/g, '&quot;');
 }
 
+function renderFileList(docs, metaLabel) {
+  return docs
+    .map(
+      (doc) => `
+              <li>
+                <a href="${docUrl(doc.slug)}" data-nav>
+                  <span class="file-name">${escapeHtml(doc.title)}</span>
+                  <span class="file-meta">${doc.questions} ${metaLabel} · <span class="badge">${escapeHtml(doc.badge)}</span></span>
+                </a>
+              </li>`
+    )
+    .join('');
+}
+
 export function renderIndex(container) {
   const docs = getAllDocs();
+  const ultraDocs = getAllUltraDocs();
   const sections = groupDocsBySection(docs);
   const totalQuestions = docs.reduce((sum, doc) => sum + doc.questions, 0);
 
@@ -24,10 +39,17 @@ export function renderIndex(container) {
         <p class="subtitle">Guía de estudio — preguntas y respuestas</p>
         <div class="stats">
           <div class="stat"><strong>${sections.length}</strong> secciones</div>
-          <div class="stat"><strong>${docs.length}</strong> archivos</div>
+          <div class="stat"><strong>${docs.length + ultraDocs.length}</strong> archivos</div>
           <div class="stat"><strong>~${totalQuestions}</strong> preguntas</div>
         </div>
       </header>
+      <section class="index-section index-section-ultra">
+        <h2><span class="section-num section-num-ultra">⚡</span> ${escapeHtml(ULTRA_SECTION.title)}</h2>
+        <p class="section-desc">${escapeHtml(ULTRA_SECTION.desc)}</p>
+        <ul class="files">
+          ${renderFileList(ultraDocs, 'temas')}
+        </ul>
+      </section>
       ${sections
         .map(
           (section) => `
@@ -51,8 +73,8 @@ export function renderIndex(container) {
         )
         .join('')}
       <footer>
-        Contenido desde <code>CONOCIMIENTO-RN-en-MD/</code>. Editá los markdown y recargá el navegador.
-        Serví con <code>npm run dev</code>.
+        Contenido desde <code>CONOCIMIENTO-RN-en-MD/</code> y <code>CONOCIMIENTO-ULTRA-RESUMEN/</code>.
+        Editá los markdown y recargá el navegador. Serví con <code>npm run dev</code>.
       </footer>
     </div>`;
 }
@@ -67,7 +89,7 @@ export function renderDoc(container, slug) {
         <nav class="back"><a href="${indexUrl()}" data-nav>← Índice</a></nav>
         <header>
           <h1>Documento no encontrado</h1>
-          <p class="section-note">No existe <code>${escapeHtml(slug)}</code> en CONOCIMIENTO-RN-en-MD.</p>
+          <p class="section-note">No existe <code>${escapeHtml(slug)}</code> en las carpetas de contenido.</p>
         </header>
       </div>`;
     return;
@@ -83,7 +105,7 @@ export function renderDoc(container, slug) {
     <div class="page page-doc">
       <nav class="back"><a href="${indexUrl()}" data-nav>← Índice</a></nav>
       <header>
-        <span class="tag">${escapeHtml(doc.badge)}</span>
+        <span class="tag${doc.source === 'ultra' ? ' tag-ultra' : ''}">${escapeHtml(doc.badge)}</span>
         <h1>${escapeHtml(title)}</h1>
         ${introHtml ? `<div class="doc-intro">${introHtml}</div>` : ''}
       </header>
