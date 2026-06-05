@@ -4,7 +4,7 @@ Bullets para repaso de memoria — chequeo mental para entrevistas.
 
 ## Reconciliation
 
-- Proceso por el que React compara el **árbol virtual nuevo** con el anterior y calcula el **mínimo** de cambios en el DOM (o host nativo).
+- Ocurre en la **render phase**: compara el **árbol virtual nuevo** con el anterior y calcula el **mínimo** de cambios a aplicar (aún **no** toca DOM ni host nativo).
 - **Diffing heurístico** (O(n)): asume que elementos del mismo tipo en la misma posición son “el mismo nodo”.
 - **Keys** — identidad estable entre renders; sin key correcta, React reutiliza nodos mal y pierde estado interno o animaciones.
 - Cambio de **tipo** de elemento (`div` → `span`, `ComponentA` → `ComponentB`) → desmonta subtree viejo y monta uno nuevo.
@@ -14,8 +14,8 @@ Bullets para repaso de memoria — chequeo mental para entrevistas.
 ## Ciclo de render
 
 1. **Trigger** — `setState`, `useState` setter, `useReducer` dispatch, contexto que cambió, props del padre, `forceUpdate` (raro).
-2. **Render phase** (puro, interrumpible en Concurrent) — ejecuta la función del componente / hooks; produce nuevo elemento React (árbol virtual). **No** toca DOM ni efectos secundarios aquí.
-3. **Commit phase** — React aplica cambios al host (DOM/nativo), ejecuta `useLayoutEffect`, pinta.
+2. **Render phase** (puro, interrumpible en Concurrent) — ejecuta la función del componente / hooks; produce el nuevo árbol virtual y hace **reconciliation** (diff). **No** toca DOM ni efectos secundarios aquí.
+3. **Commit phase** — aplica al host (DOM/nativo) los cambios ya calculados en render; ejecuta `useLayoutEffect`, pinta.
 4. **Passive effects** — `useEffect` corre **después** del paint (async respecto al commit).
 5. Hijo con **mismas props** (shallow) y mismo tipo puede **bail out** si está envuelto en `React.memo` y el padre re-renderizó sin cambiarle props.
 6. **Strict Mode (dev)** — monta, desmonta y remonta para detectar efectos no idempotentes.
@@ -53,6 +53,66 @@ evento → render (JS) → commit (DOM) → paint → useEffect
 - `useCallback(fn, deps)` ≈ `useMemo(() => fn, deps)`.
 - `React.memo` no evita que el **padre** renderice; evita que el **hijo** vuelva a ejecutar su función si props iguales.
 - Los tres comparan deps con **igualdad referencial** (`Object.is`), no deep equal.
+
+## Context API
+
+- **Problema que resuelve** — **prop drilling**: pasar props por capas intermedias que no las usan solo para que lleguen al hijo profundo.
+- **API mínima** — `createContext(defaultValue)` → `<MyContext.Provider value={…}>` → `useContext(MyContext)` en cualquier descendiente.
+- **Provider** — cualquier componente bajo el Provider puede leer el valor; no hace falta pasarlo manualmente por props.
+- **defaultValue** — solo se usa si **no** hay Provider arriba en el árbol; no re-renderiza consumidores por sí solo.
+- **Cambio de `value`** — si el Provider entrega un `value` nuevo (referencia distinta), **todos** los componentes que llaman `useContext` en ese contexto re-renderizan.
+- **Memoizar el `value`** — `value={{ user, login }}` inline en cada render crea objeto nuevo → rerender masivo; usar `useMemo(() => ({ user, login }), [user, login])`.
+- **Split de contextos** — separar por dominio (`ThemeContext`, `AuthContext`) en lugar de un solo contexto con todo el state de la app.
+- **Provider component** — patrón típico: componente que encapsula `useState`/`useReducer`, effects y expone `{ state, actions }` memoizado.
+- **Custom hook** — `function useAuth() { const ctx = useContext(AuthContext); if (!ctx) throw new Error('…'); return ctx; }` para API clara y error si falta Provider.
+- **No es un store global completo** — React Context no trae selectores, middleware ni devtools; para state global complejo → Zustand, Redux, Jotai, etc.
+- **Selectores** — React core no filtra por campo: leer el contexto entero suscribe al objeto completo; librerías (`use-context-selector`) o state externo si necesitás granularidad.
+
+Ejemplo clásico — guardar el **nombre de usuario** y leerlo en un hijo profundo sin prop drilling:
+
+```jsx
+import { createContext, useContext, useMemo, useState } from 'react';
+
+const UserContext = createContext(null);
+
+export function UserProvider({ children }) {
+  const [username, setUsername] = useState('');
+
+  const value = useMemo(
+    () => ({ username, setUsername }),
+    [username],
+  );
+
+  return (
+    <UserContext.Provider value={value}>
+      {children}
+    </UserContext.Provider>
+  );
+}
+
+export function useUser() {
+  const ctx = useContext(UserContext);
+  if (!ctx) throw new Error('useUser must be used within UserProvider');
+  return ctx;
+}
+
+// Hijo profundo — no recibe username por props
+function WelcomeBanner() {
+  const { username } = useUser();
+  return <p>Hola, {username || 'invitado'}</p>;
+}
+
+function App() {
+  return (
+    <UserProvider>
+      <WelcomeBanner />
+    </UserProvider>
+  );
+}
+```
+
+- `UserProvider` tiene el state; `useMemo` evita un `value` nuevo en cada render si `username` no cambió.
+- `WelcomeBanner` puede estar a 5 niveles de profundidad y igual accede con `useUser()`.
 
 ## ¿Qué causa rerenders innecesarios?
 
