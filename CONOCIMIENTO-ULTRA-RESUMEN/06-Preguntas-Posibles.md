@@ -319,4 +319,4 @@ setCount(prev => prev + 1);
 - [ ] FlatList + keys + virtualización
 - [ ] Proceso reproduce → mide → optimiza
 
-Ver también: `00-JS.md` · `01-React.md` · `02-RN.md` · `03-Performance.md` · `04-General.md` · `05-LiveCoding.md`.
+Ver también: `00-JS.md` · `01-React.md` · `02-RN.md` · `04-General.md` · `05-LiveCoding.md`.

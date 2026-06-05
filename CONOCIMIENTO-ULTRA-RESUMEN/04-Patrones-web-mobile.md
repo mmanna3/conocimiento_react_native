@@ -36,3 +36,25 @@ mount → fetch page 1 → scroll end → fetch next → concat → hasta !hasMo
 - **Mutaciones** — POST/PATCH/DELETE + `invalidateQueries` o optimistic update con rollback.
 - **Offline** — leer cache, cola de mutaciones, sync al reconectar (ver 02-RN Offline First).
 - **No** mezclar fetch crudo en cada componente; un módulo `api/` o hooks por dominio.
+
+## Códigos HTTP más usados
+
+- **2xx — éxito**
+  - **200 OK** — GET/PUT exitoso; body con datos.
+  - **201 Created** — POST creó recurso; suele devolver `Location` o el objeto creado.
+  - **204 No Content** — éxito sin body (DELETE, PATCH, PUT sin respuesta).
+- **3xx — redirección / cache**
+  - **301 Moved Permanently** — URL cambió para siempre; actualizar bookmarks/cliente.
+  - **304 Not Modified** — cache válida; el cliente usa la versión local (`If-None-Match` / `If-Modified-Since`).
+- **4xx — error del cliente**
+  - **400 Bad Request** — payload malformado o parámetros inválidos.
+  - **401 Unauthorized** — sin auth o token inválido/expirado → login o refresh.
+  - **403 Forbidden** — autenticado pero sin permiso para ese recurso.
+  - **404 Not Found** — recurso o ruta inexistente.
+  - **409 Conflict** — conflicto de estado (ej. email duplicado, versión desactualizada).
+  - **422 Unprocessable Entity** — sintaxis OK pero validación de negocio falló (campos, reglas).
+  - **429 Too Many Requests** — rate limit; respetar `Retry-After`.
+- **5xx — error del servidor**
+  - **500 Internal Server Error** — fallo genérico del backend.
+  - **502 Bad Gateway** — proxy/gateway recibió respuesta inválida del upstream.
+  - **503 Service Unavailable** — servidor caído o en mantenimiento; reintentar con backoff.

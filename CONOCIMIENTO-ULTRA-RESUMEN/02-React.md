@@ -121,6 +121,26 @@ function App() {
 - **Props nuevas por referencia** — `style={{}}`, `onPress={() => …}`, `data={[...]}` en cada render → rompe `React.memo`.
 - **Keys inestables** — `key={Math.random()}` fuerza remount y pierde optimizaciones de lista.
 - **Context + estado mezclados** sin memoizar el `value` del Provider.
-- **Redux/Zustand** — selector que devuelve objeto nuevo cada vez → suscripción dispara siempre.
+- **Redux / Zustand / TanStack Query** — selector o `select` que devuelve objeto/array nuevo cada vez → suscripción dispara siempre.
 - **Padre re-renderiza** → hijos no memoizados **siempre** re-renderizan aunque sus props “sean iguales” en valor (nueva referencia).
-- **Solución típica** — estado local, `React.memo`, `useCallback`/`useMemo` con deps correctas, context split, bibliotecas de lista virtualizadas, profiling.
+- **Solución típica** — estado local, `React.memo`, `useCallback`/`useMemo` con deps correctas, context split, bibliotecas de lista virtualizadas.
+- **Diagnóstico (dev)** — React DevTools “Highlight updates”; librería `why-did-you-render`.
+
+## Profiling
+
+- **React DevTools Profiler** — grabar interacción, ver commits, tiempo por componente, chart “ranked”.
+- **Flujo** — reproducir lag → Profiler → componente más caro → ¿render duplicado o trabajo pesado dentro del render? → optimizar o mover fuera del render.
+- Medir antes y después; optimizar sin profiling es adivinanza.
+
+## Memory leaks (JS / React)
+
+- **Listeners** no removidos en cleanup de `useEffect`.
+- **Timers** (`setInterval`, `setTimeout`) sin `clearInterval` / `clearTimeout`.
+- **Subscriptions** (WebSocket, observables, event emitters) sin unsubscribe.
+- **Closures** que retienen objetos grandes (cache en `ref` sin límite).
+- **Prevención** — return de cleanup en effects (ver [useEffect pitfalls](#useeffect-pitfalls)); en RN también listeners de app/navegación — ver [02-RN.md](./02-RN.md#memory-leaks-rn).
+
+## Lazy loading
+
+- **React.lazy + Suspense** — code-split por ruta o feature (web; en RN si el bundler soporta dynamic import).
+- **Datos** — paginación o carga incremental; no traer el dataset completo al primer mount.
